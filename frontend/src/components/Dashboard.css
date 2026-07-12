@@ -1,0 +1,840 @@
+/* ============================================
+   DESIGN PRINCIPLES APPLIED:
+   - Golden Ratio (1.618) for proportions
+   - Rule of Thirds for layout
+   - F-Pattern for eye movement
+   - Z-Pattern for content flow
+   - Grid System (12 columns)
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+.dashboard-container {
+  min-height: 100vh;
+  background: #0f0f0f;
+  color: #e5e7eb;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================
+   HEADER - F-Pattern Start
+   ============================================ */
+
+.dashboard-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(14, 165, 233, 0.02) 100%);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  padding: 1.618rem 2rem; /* Golden ratio */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  animation: slideDown 0.5s ease-out;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.dashboard-title {
+  font-size: 2.618rem; /* Golden ratio */
+  font-weight: 800;
+  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.618rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+/* Search Container */
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.618rem;
+  padding: 0.8rem 1.2rem;
+  background: rgba(31, 41, 55, 0.6);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  flex: 0 1 300px;
+  max-width: 100%;
+}
+
+.search-container svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #e5e7eb;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+.search-input::placeholder {
+  color: #6b7280;
+}
+
+/* User Menu */
+.user-menu-wrapper {
+  position: relative;
+}
+
+.user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.618rem;
+  padding: 0.5rem 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  color: #e5e7eb;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-profile-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.user-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.user-name-short {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.user-profile-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+}
+
+.user-profile-btn:hover svg {
+  transform: rotate(180deg);
+}
+
+/* User Dropdown */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 0.618rem);
+  right: 0;
+  background: rgba(15, 15, 15, 0.95);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  min-width: 260px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: slideDown 0.3s ease-out;
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+}
+
+.dropdown-header {
+  padding: 1.2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.dropdown-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.dropdown-user-info {
+  flex: 1;
+}
+
+.dropdown-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #e5e7eb;
+  margin: 0 0 0.3rem 0;
+}
+
+.dropdown-email {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0;
+  word-break: break-all;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(59, 130, 246, 0.1);
+  margin: 0.8rem 0;
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: #d1d5db;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  padding-left: 1.5rem;
+}
+
+.dropdown-item.logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* ============================================
+   MAIN LAYOUT - Golden Ratio & Grid System
+   ============================================ */
+
+.dashboard-main {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  overflow: visible;
+  position: relative;
+}
+
+/* Sidebar - Rule of Thirds (left 1/3) */
+.dashboard-sidebar {
+  width: 280px; /* Golden ratio proportion */
+  background: rgba(15, 23, 42, 0.6);
+  border-right: 1px solid rgba(59, 130, 246, 0.1);
+  padding: 2rem 1.5rem;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.sidebar-section {
+  margin-bottom: 2rem;
+}
+
+.sidebar-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+}
+
+/* Storage Display - Circular Progress */
+.storage-display {
+  text-align: center;
+}
+
+.storage-circle {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 1rem;
+  position: relative;
+}
+
+.storage-circle svg {
+  width: 100%;
+  height: 100%;
+}
+
+.storage-circle circle.storage-bg {
+  fill: none;
+  stroke: rgba(59, 130, 246, 0.1);
+  stroke-width: 3;
+}
+
+.storage-circle circle.storage-ring {
+  fill: none;
+  stroke: url(#storageGradient);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform-origin: 60px 60px;
+  transform: rotate(-90deg);
+  transition: stroke-dasharray 0.5s ease;
+}
+
+.storage-circle text.storage-text {
+  font-size: 24px;
+  font-weight: 700;
+  fill: #fbbf24;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.storage-info {
+  font-size: 0.85rem;
+  color: #d1d5db;
+  margin: 0;
+}
+
+/* Action Buttons */
+.action-btn {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+}
+
+.action-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateX(4px);
+}
+
+/* File Stats */
+.file-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem;
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.stat-icon {
+  font-size: 1.2rem;
+}
+
+.stat-text {
+  flex: 1;
+  font-size: 0.85rem;
+  color: #d1d5db;
+}
+
+.stat-value {
+  font-weight: 700;
+  color: #3b82f6;
+  min-width: 20px;
+  text-align: right;
+}
+
+/* Content Area - Rule of Thirds (right 2/3) */
+.dashboard-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  overflow-x: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Tabs */
+.content-tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  padding-bottom: 1rem;
+}
+
+.tab {
+  padding: 0.8rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab:hover {
+  color: #d1d5db;
+}
+
+.tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+/* Upload Progress */
+.upload-progress-container {
+  padding: 1.2rem;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 10px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.upload-progress {
+  width: 100%;
+  height: 6px;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.8rem;
+}
+
+.upload-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #0ea5e9 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.upload-progress-text {
+  font-size: 0.85rem;
+  color: #3b82f6;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Files Container - Z-Pattern */
+.files-container {
+  flex: 1;
+  min-height: 300px;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  color: #9ca3af;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(59, 130, 246, 0.2);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  color: #9ca3af;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin: 0;
+}
+
+.empty-text {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.files-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.618rem; /* Golden ratio */
+  animation: fadeInUp 0.5s ease-out;
+  overflow: visible;
+}
+
+.file-card {
+  background: rgba(31, 41, 55, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  padding: 1.2rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.file-card:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(31, 41, 55, 0.95);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
+}
+
+.file-card-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.file-type-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.file-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 0 0 0.3rem 0;
+  word-break: break-word;
+  line-height: 1.4;
+  font-size: 0.95rem;
+}
+
+.file-meta {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.file-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  overflow: visible;
+}
+
+.file-menu-container {
+  position: relative;
+}
+
+.file-menu-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #9ca3af;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-menu-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.file-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: rgba(15, 15, 15, 0.95);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  min-width: 160px;
+  z-index: 1000;
+  animation: slideDown 0.2s ease-out;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.menu-item {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: #d1d5db;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.menu-item:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  padding-left: 1.3rem;
+}
+
+.menu-item.delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Storage Breakdown - Golden Ratio Grid */
+.storage-breakdown {
+  margin-top: 2rem;
+}
+
+.breakdown-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin-bottom: 1.618rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.breakdown-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+  border-radius: 2px;
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.618rem; /* Golden ratio */
+}
+
+.breakdown-card {
+  background: rgba(31, 41, 55, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.breakdown-card:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(31, 41, 55, 0.95);
+  transform: translateY(-4px);
+}
+
+.breakdown-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.breakdown-icon {
+  font-size: 1.8rem;
+}
+
+.breakdown-name {
+  font-weight: 600;
+  color: #d1d5db;
+  font-size: 0.95rem;
+}
+
+.breakdown-size {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3b82f6;
+  margin: 0;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+.dashboard-sidebar::-webkit-scrollbar,
+.dashboard-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-sidebar::-webkit-scrollbar-track,
+.dashboard-content::-webkit-scrollbar-track {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.dashboard-sidebar::-webkit-scrollbar-thumb,
+.dashboard-content::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+}
+
+.dashboard-sidebar::-webkit-scrollbar-thumb:hover,
+.dashboard-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+/* ============================================
+   RESPONSIVE - Mobile First
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .dashboard-main {
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+  }
+
+  .files-list {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .dashboard-title {
+    font-size: 1.618rem;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search-container {
+    flex: 1;
+    max-width: none;
+  }
+
+  .dashboard-sidebar {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .dashboard-content {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .files-list {
+    grid-template-columns: 1fr;
+  }
+
+  .breakdown-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding: 0.8rem;
+  }
+
+  .dashboard-title {
+    font-size: 1.2rem;
+  }
+
+  .user-name-short {
+    display: none;
+  }
+
+  .user-profile-btn {
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+
+  .user-avatar-small {
+    margin: 0;
+  }
+
+  .content-tabs {
+    gap: 0.5rem;
+  }
+
+  .tab {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Hidden Input */
+.hidden-input {
+  display: none;
+}
