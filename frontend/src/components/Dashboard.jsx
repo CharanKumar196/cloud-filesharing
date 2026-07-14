@@ -5,13 +5,14 @@ import EditProfileModal from './EditProfileModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import FeedbackModal from './FeedbackModal';
 import PreviewModal from './PreviewModal';
+import CloudLogo from '../components/CloudLogo';
 
 export default function Dashboard({ token, onLogout }) {
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
   const [storageInfo, setStorageInfo] = useState({ storageUsed: 0, storageLimit: 5 * 1024 * 1024 * 1024 });
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [userName, setUserName] = useState('User');
@@ -22,6 +23,7 @@ export default function Dashboard({ token, onLogout }) {
   const [archivedFiles, setArchivedFiles] = useState([]);
   const [currentFolder, setCurrentFolder] = useState(null);
   const [folderPath, setFolderPath] = useState([{ name: 'My Files', id: null }]);
+  const [recentFiles, setRecentFiles] = useState([]);
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -38,6 +40,17 @@ export default function Dashboard({ token, onLogout }) {
     setUserName(name);
     setUserEmail(email);
   }, []);
+
+  // ✅ NEW: Close menu when clicking outside file-card
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showFileMenu && !e.target.closest('.file-card')) {
+        setShowFileMenu(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showFileMenu]);
 
   const loadDashboardData = async () => {
     try {

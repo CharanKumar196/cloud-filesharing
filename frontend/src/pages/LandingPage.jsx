@@ -37,38 +37,12 @@ export default function LandingPage() {
       <div className="landing-glow landing-glow-2"></div>
       <div className="landing-glow landing-glow-3"></div>
 
-      {/* Navbar */}
-      <nav className={`navbar ${pageReady ? 'fade-in' : ''}`}>
-        <div className="navbar-content">
-          <div className="logo">
-            <svg className="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" fill="currentColor"/>
-            </svg>
-            <span className="logo-text">cloud-file-sharing</span>
-          </div>
-          <div className="navbar-buttons">
-            <button 
-              className="navbar-btn navbar-login"
-              onClick={() => navigate('/login')}
-            >
-              Sign in
-            </button>
-            <button 
-              className="navbar-btn navbar-signup"
-              onClick={() => navigate('/signup')}
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
           <div className={`hero-text ${pageReady ? 'slide-up' : ''}`}>
             <h1 className="hero-title">
-              Secure File Sharing
+              Cloud File Sharing
               <span className="gradient-text"> Made Easy</span>
             </h1>
             <p className="hero-subtitle">

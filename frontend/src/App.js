@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import './App.css';
+import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 import Login from './components/Login';
 import Signup from './components/Signup';
@@ -47,6 +48,9 @@ function App() {
 
   return (
     <BrowserRouter>
+      {/* Global Navbar with Cloud Logo */}
+      <Navbar />
+      
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={token ? <Navigate to="/dashboard" /> : <LandingPage />} />
