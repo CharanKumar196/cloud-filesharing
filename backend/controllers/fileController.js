@@ -61,7 +61,7 @@ exports.uploadFile = async (req, res) => {
 // @desc    Get all files for logged in user
 exports.getUserFiles = async (req, res) => {
   try {
-    const files = await File.find({ userId: req.user.id, folderId: null })
+    const files = await File.find({ userId: req.user.id, folderId: null, isArchived: false })
       .sort({ uploadedAt: -1 });
 
     res.status(200).json({
@@ -510,6 +510,30 @@ exports.getPublicFileDownload = async (req, res) => {
       success: true,
       downloadUrl,
       filename: file.filename
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+// @route   GET /api/files/archived
+// @desc    Get archived files for logged in user
+exports.getArchivedFiles = async (req, res) => {
+  try {
+    const files = await File.find({ userId: req.user.id, isArchived: true })
+      .sort({ uploadedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: files.length,
+      files: files.map(f => ({
+        _id: f._id,
+        filename: f.filename,
+        fileSize: f.size,
+        uploadDate: f.uploadedAt,
+        isPublic: f.isPublic,
+        isArchived: f.isArchived || false,
+        mimeType: f.mimeType
+      }))
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

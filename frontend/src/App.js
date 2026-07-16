@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
 import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
@@ -9,7 +9,9 @@ import Dashboard from './components/Dashboard';
 import ResetPassword from './components/ResetPassword';
 import SharedFileView from './components/SharedFileView';
 
-function App() {
+
+function AppContent() {
+  const location = useLocation();
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   useEffect(() => {
@@ -25,7 +27,6 @@ function App() {
       const newToken = localStorage.getItem('token');
       setToken(newToken);
     };
-
     window.addEventListener('storage', handleStorageChange);
     const interval = setInterval(() => {
       const newToken = localStorage.getItem('token');
@@ -33,7 +34,6 @@ function App() {
         setToken(newToken);
       }
     }, 500);
-
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
@@ -43,33 +43,30 @@ function App() {
   const handleLogout = () => {
     setToken(null);
     localStorage.removeItem('token');
-    // Redirect will happen automatically via Navigate
   };
 
+  // Hide navbar on Dashboard only
+const showNavbar = location.pathname === '/';
   return (
-    <BrowserRouter>
-      {/* Global Navbar with Cloud Logo */}
-      <Navbar />
-      
+    <>
+      {showNavbar && <Navbar />}
       <Routes>
-        {/* Public Routes */}
         <Route path="/" element={token ? <Navigate to="/dashboard" /> : <LandingPage />} />
         <Route path="/login" element={token ? <Navigate to="/dashboard" /> : <Login />} />
         <Route path="/signup" element={token ? <Navigate to="/dashboard" /> : <Signup />} />
         <Route path="/reset-password" element={token ? <Navigate to="/dashboard" /> : <ResetPassword />} />
-
-        {/* Shared File - PUBLIC (no auth required) */}
         <Route path="/shared/:fileId" element={<SharedFileView />} />
-        
-        {/* Protected Routes */}
-        <Route 
-          path="/dashboard" 
-          element={token ? <Dashboard token={token} onLogout={handleLogout} /> : <Navigate to="/" />} 
-        />
-
-        {/* Catch-all */}
+        <Route path="/dashboard" element={token ? <Dashboard token={token} onLogout={handleLogout} /> : <Navigate to="/" />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

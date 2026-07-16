@@ -19,9 +19,10 @@
 .navbar-logo {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 1.5rem;  /* Increased from 0.8rem to 1.5rem */
   cursor: pointer;
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .navbar-logo:hover {
@@ -33,6 +34,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 /* Navigation Menu */

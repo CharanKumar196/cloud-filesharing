@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
-import { getFiles, uploadFile, deleteFile, getStorageInfo, getRecentFiles, renameFile, archiveFile, unarchiveFile, shareFile, getFolders, createFolder, renameFolder, deleteFolder, getFolderFiles, moveFileToFolder } from '../api';
+import { getFiles, uploadFile, deleteFile, getStorageInfo, getRecentFiles, getArchivedFiles, renameFile, archiveFile, unarchiveFile, shareFile, getFolders, createFolder, renameFolder, deleteFolder, getFolderFiles, moveFileToFolder } from '../api';
 import EditProfileModal from './EditProfileModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import FeedbackModal from './FeedbackModal';
@@ -43,42 +43,43 @@ export default function Dashboard({ token, onLogout }) {
 
   // ✅ NEW: Close menu when clicking outside file-card
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (showFileMenu && !e.target.closest('.file-card')) {
-        setShowFileMenu(null);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [showFileMenu]);
-
-  const loadDashboardData = async () => {
-    try {
-      if (!showFileMenu) {
-        setLoading(true);
-      }
-
-      const [filesData, storageData, recentData, foldersData] = await Promise.all([
-        getFiles(token),
-        getStorageInfo(token),
-        getRecentFiles(token),
-        getFolders(token)
-      ]);
-
-      const allFiles = filesData.files || [];
-      setFiles(allFiles.filter(f => !f.isArchived));
-      setArchivedFiles(allFiles.filter(f => f.isArchived));
-      setStorageInfo(storageData || { storageUsed: 0, storageLimit: 5 * 1024 * 1024 * 1024 });
-      setRecentFiles(recentData.files || []);
-      setFolders(foldersData.folders || []);
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
-    } finally {
-      if (!showFileMenu) {
-        setLoading(false);
-      }
+  const handleClickOutside = (e) => {
+    // Don't close if clicking on file-menu or file-menu-btn
+    if (showFileMenu && !e.target.closest('.file-menu') && !e.target.closest('.file-menu-btn')) {
+      setShowFileMenu(null);
     }
   };
+  document.addEventListener('click', handleClickOutside);
+  return () => document.removeEventListener('click', handleClickOutside);
+}, [showFileMenu]);
+
+const loadDashboardData = async () => {
+  try {
+    if (!showFileMenu) {
+      setLoading(true);
+    }
+
+    const [filesData, storageData, recentData, foldersData, archivedData] = await Promise.all([
+      getFiles(token),
+      getStorageInfo(token),
+      getRecentFiles(token),
+      getFolders(token),
+      getArchivedFiles(token)
+    ]);
+
+    setFiles(filesData.files || []);
+    setArchivedFiles(archivedData.files || []);
+    setStorageInfo(storageData || { storageUsed: 0, storageLimit: 5 * 1024 * 1024 * 1024 });
+    setRecentFiles(recentData.files || []);
+    setFolders(foldersData.folders || []);
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+  } finally {
+    if (!showFileMenu) {
+      setLoading(false);
+    }
+  }
+};
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -317,6 +318,11 @@ export default function Dashboard({ token, onLogout }) {
   } else if (activeFilter === 'media') {
     filteredFiles = filteredFiles.filter(f => f.filename.match(/\.(mp4|avi|mov|mkv|mp3)$/i));
   }
+  else if (activeFilter === 'archived') {
+    filteredFiles = archivedFiles.filter(f =>
+      f.filename.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
 
   const displayFiles = activeTab === 'files' ? filteredFiles : archivedFiles;
 
@@ -359,9 +365,12 @@ export default function Dashboard({ token, onLogout }) {
       .reduce((sum, f) => sum + (f.fileSize || 0), 0);
   };
 
-  const toggleMenu = (id) => {
-    setShowFileMenu(showFileMenu === id ? null : id);
-  };
+ const toggleMenu = (id, e) => {
+  if (e) {
+    e.stopPropagation();
+  }
+  setShowFileMenu(showFileMenu === id ? null : id);
+};
 
   return (
     <div className="dashboard-container">
@@ -409,21 +418,21 @@ export default function Dashboard({ token, onLogout }) {
                 <div className="dropdown-divider"></div>
                 <button
                   onClick={() => setIsEditProfileOpen(true)}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-blue-400 hover:bg-gray-800 rounded transition"
+                    className="dropdown-item"
                 >
                   <span>✏️</span> Edit Profile
                 </button>
 
                 <button
                   onClick={() => setIsChangePasswordOpen(true)}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-blue-400 hover:bg-gray-800 rounded transition"
+                    className="dropdown-item"
                 >
                   <span>🔒</span> Change Password
                 </button>
 
                 <button
                   onClick={() => setIsFeedbackOpen(true)}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-blue-400 hover:bg-gray-800 rounded transition"
+                    className="dropdown-item"
                 >
                   <span>💬</span> Feedback
                 </button>
@@ -692,7 +701,10 @@ export default function Dashboard({ token, onLogout }) {
                       <div className="file-menu-container">
                         <button
                           className="file-menu-btn"
-                          onClick={() => toggleMenu(file._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMenu(file._id, e);
+                          }}
                           title="More options"
                         >
                           ⋮
@@ -721,12 +733,12 @@ export default function Dashboard({ token, onLogout }) {
             <div className="breakdown-grid">
               <div className="breakdown-card" onClick={() => setActiveFilter(activeFilter === 'images' ? null : 'images')} style={{ cursor: 'pointer', opacity: activeFilter === 'images' ? 1 : 0.7, borderBottom: activeFilter === 'images' ? '3px solid #4A90E2' : 'none', transition: 'all 0.3s' }}>
                 <div className="breakdown-header"><span className="breakdown-icon">🖼️</span><span className="breakdown-name">Images</span></div>
-                <p className="breakdown-size">{formatFileSize(getStorageByType(files, /\.(jpg|jpeg|png|gif)$/i))}</p>
+                <p className="breakdown-size">{formatFileSize(getStorageByType(activeTab === 'archives' ? archivedFiles : files, /\.(jpg|jpeg|png|gif)$/i))}</p>
               </div>
 
               <div className="breakdown-card" onClick={() => setActiveFilter(activeFilter === 'documents' ? null : 'documents')} style={{ cursor: 'pointer', opacity: activeFilter === 'documents' ? 1 : 0.7, borderBottom: activeFilter === 'documents' ? '3px solid #4A90E2' : 'none', transition: 'all 0.3s' }}>
                 <div className="breakdown-header"><span className="breakdown-icon">📄</span><span className="breakdown-name">Documents</span></div>
-                <p className="breakdown-size">{formatFileSize(getStorageByType(files, /\.(pdf|docx|doc|txt)$/i))}</p>
+                <p className="breakdown-size">{formatFileSize(getStorageByType(activeTab === 'archives' ? archivedFiles : files, /\.(pdf|docx|doc|txt)$/i))}</p>
               </div>
 
               <div className="breakdown-card" onClick={() => setActiveFilter(activeFilter === 'archived' ? null : 'archived')} style={{ cursor: 'pointer', opacity: activeFilter === 'archived' ? 1 : 0.7, borderBottom: activeFilter === 'archived' ? '3px solid #4A90E2' : 'none', transition: 'all 0.3s' }}>
@@ -736,7 +748,7 @@ export default function Dashboard({ token, onLogout }) {
 
               <div className="breakdown-card" onClick={() => setActiveFilter(activeFilter === 'media' ? null : 'media')} style={{ cursor: 'pointer', opacity: activeFilter === 'media' ? 1 : 0.7, borderBottom: activeFilter === 'media' ? '3px solid #4A90E2' : 'none', transition: 'all 0.3s' }}>
                 <div className="breakdown-header"><span className="breakdown-icon">🎬</span><span className="breakdown-name">Media</span></div>
-                <p className="breakdown-size">{formatFileSize(getStorageByType(files, /\.(mp4|avi|mov|mkv|mp3)$/i))}</p>
+                <p className="breakdown-size">{formatFileSize(getStorageByType(activeTab === 'archives' ? archivedFiles : files, /\.(mp4|avi|mov|mkv|mp3)$/i))}</p>
               </div>
             </div>
           </div>

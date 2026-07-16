@@ -15,7 +15,8 @@ const {
   shareFile,
   moveFileToFolder,
   getPublicFile,
-  getPublicFileDownload
+  getPublicFileDownload,
+  getArchivedFiles
 } = require('../controllers/fileController');
 const { protect } = require('../middleware/auth');
 
@@ -30,6 +31,7 @@ router.post('/upload', protect, uploadFile);
 
 // Get all files
 router.get('/', protect, getUserFiles);
+router.get('/archived', protect, getArchivedFiles);
 
 // ✅ SPECIFIC ROUTES FIRST (before /:id)
 router.get('/recent', protect, getRecentFiles);

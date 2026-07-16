@@ -167,7 +167,7 @@ export const getStorageInfo = async (token) => {
 };
 
 export const getRecentFiles = async (token) => {
-  const response = await fetch(`${API_URL}/files/recent`, {
+  const response = await fetch(`${API_URL}/files/archived`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   return response.json();
@@ -318,6 +318,13 @@ export const moveFileToFolder = async (fileId, folderId, token) => {
       'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify({ folderId })
+  });
+  return response.json();
+};
+
+export const getArchivedFiles = async (token) => {
+  const response = await fetch(`${API_URL}/files/archived`, {
+    headers: { 'Authorization': `Bearer ${token}` }
   });
   return response.json();
 };

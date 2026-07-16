@@ -236,9 +236,6 @@ export default function LandingPage() {
             </ul>
           </div>
         </div>
-        <div className="footer-bottom">
-          <p>&copy; 2026 cloud-file-sharing. All rights reserved.</p>
-        </div>
       </footer>
     </div>
   );
