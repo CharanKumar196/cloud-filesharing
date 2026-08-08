@@ -16,6 +16,7 @@ export default function Dashboard({ token, onLogout }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [userName, setUserName] = useState('User');
+  const [showSidebar, setShowSidebar] = useState(false);
   const [userEmail, setUserEmail] = useState('user@example.com');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(null);
@@ -26,6 +27,7 @@ export default function Dashboard({ token, onLogout }) {
   const [recentFiles, setRecentFiles] = useState([]);
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
+  const sidebarRef = useRef(null);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -52,6 +54,29 @@ export default function Dashboard({ token, onLogout }) {
   document.addEventListener('click', handleClickOutside);
   return () => document.removeEventListener('click', handleClickOutside);
 }, [showFileMenu]);
+useEffect(() => {
+  const handleClickOutsideDropdown = (e) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      setShowUserDropdown(false);
+    }
+  };
+  document.addEventListener('click', handleClickOutsideDropdown);
+  return () => document.removeEventListener('click', handleClickOutsideDropdown);
+}, []);
+useEffect(() => {
+  const handleClickOutsideSidebar = (e) => {
+    if (
+      showSidebar &&
+      sidebarRef.current &&
+      !sidebarRef.current.contains(e.target) &&
+      !e.target.closest('.sidebar-menu-btn')
+    ) {
+      setShowSidebar(false);
+    }
+  };
+  document.addEventListener('click', handleClickOutsideSidebar);
+  return () => document.removeEventListener('click', handleClickOutsideSidebar);
+}, [showSidebar]);
 
 const loadDashboardData = async () => {
   try {
@@ -59,7 +84,7 @@ const loadDashboardData = async () => {
       setLoading(true);
     }
 
-    const [filesData, storageData, recentData, foldersData, archivedData] = await Promise.all([
+    const [filesData,storageData, recentData, foldersData, archivedData] = await Promise.all([
       getFiles(token),
       getStorageInfo(token),
       getRecentFiles(token),
@@ -376,8 +401,15 @@ const loadDashboardData = async () => {
     <div className="dashboard-container">
       <header className="dashboard-header">
         <div className="header-left">
-          <h1 className="dashboard-title">My Files</h1>
-        </div>
+          <button
+            className="sidebar-menu-btn"
+            onClick={() => setShowSidebar(!showSidebar)}
+            title="Menu"
+  >
+    ☰
+  </button>
+  <h1 className="dashboard-title">My Files</h1>
+</div>
         <div className="header-right">
           <div className="search-container">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -450,9 +482,11 @@ const loadDashboardData = async () => {
       </header>
 
       <div className="dashboard-main">
-        <aside className="dashboard-sidebar">
-          <div className="sidebar-section">
-            <h3 className="sidebar-title">Storage</h3>
+        <aside ref={sidebarRef} className={`dashboard-sidebar ${showSidebar ? 'open' : 'closed'}`}>
+          
+
+  <div className="sidebar-section">
+    <h3 className="sidebar-title">Storage</h3>
             <div className="storage-display">
               <div className="storage-circle">
                 <svg viewBox="0 0 120 120">
@@ -535,49 +569,38 @@ const loadDashboardData = async () => {
           </div>
 
           {folderPath.length > 1 && (
-            <div className="breadcrumb-nav" style={{ padding: '10px 0', marginBottom: '10px' }}>
-              {folderPath.map((pathItem, index) => (
-                <span key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {index > 0 && <span style={{ color: '#888' }}>/</span>}
-                  <button
-                    onClick={() => {
-                      const newPath = folderPath.slice(0, index + 1);
-                      setFolderPath(newPath);
-                      setCurrentFolder(newPath[newPath.length - 1].id);
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#4A90E2',
-                      cursor: 'pointer',
-                      textDecoration: 'underline',
-                      fontSize: '14px'
-                    }}
-                  >
-                    {pathItem.name}
-                  </button>
-                </span>
-              ))}
-              {folderPath.length > 1 && (
-                <button
-                  onClick={handleBackFolder}
-                  style={{
-                    marginLeft: '10px',
-                    background: '#4A90E2',
-                    color: 'white',
-                    border: 'none',
-                    padding: '5px 10px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '12px'
-                  }}
-                >
-                  ← Back
-                </button>
-              )}
-            </div>
-          )}
+  <div className="folder-header-card">
+    <div className="folder-header-info">
+      <h2 className="folder-header-title">
+        {folderPath[folderPath.length - 1].name}
+      </h2>
+      <div className="folder-header-breadcrumb">
+        {folderPath.map((pathItem, index) => {
+          const isLast = index === folderPath.length - 1;
+          return (
+            <span key={index} className="breadcrumb-item">
+              {index > 0 && <span className="breadcrumb-sep">/</span>}
+              <button
+                onClick={() => {
+                  const newPath = folderPath.slice(0, index + 1);
+                  setFolderPath(newPath);
+                  setCurrentFolder(newPath[newPath.length - 1].id);
+                }}
+                className={`breadcrumb-link ${isLast ? 'active' : ''}`}
+              >
+                {pathItem.name}
+              </button>
+            </span>
+          );
+        })}
+      </div>
+    </div>
 
+    <button onClick={handleBackFolder} className="folder-back-btn">
+      <span className="back-arrow">←</span> Back
+    </button>
+  </div>
+)}
           {uploading && (
             <div className="upload-progress-container">
               <div className="upload-progress">
@@ -603,7 +626,7 @@ const loadDashboardData = async () => {
                 <div className="files-list">
                   {displayFiles.map(file => (
                     <div key={file._id} className="file-card">
-                      <div className="file-card-header">
+                      <div className="file-card-header" onDoubleClick={() => handlePreview(file)} style={{ cursor: 'pointer' }}>
                         <span className="file-type-icon">{getFileIcon(file.filename)}</span>
                         <div className="file-card-title">
                           <p className="file-name" title={file.filename}>
@@ -650,8 +673,7 @@ const loadDashboardData = async () => {
               <div className="files-list">
                 {currentFolder === null && !activeFilter && folders.map(folder => (
                   <div key={folder._id} className="file-card" style={{ borderLeft: `4px solid ${folder.color || '#4A90E2'}` }}>
-                    <div className="file-card-header" onClick={() => handleOpenFolder(folder._id)} style={{ cursor: 'pointer' }}>
-                      <span className="file-type-icon">📂</span>
+                    <div className="file-card-header" onDoubleClick={() => handleOpenFolder(folder._id)} style={{ cursor: 'pointer' }}>                      <span className="file-type-icon">📂</span>
                       <div className="file-card-title">
                         <p className="file-name" title={folder.name}>
                           {folder.name}
@@ -685,7 +707,7 @@ const loadDashboardData = async () => {
 
                 {displayFiles.map(file => (
                   <div key={file._id} className="file-card">
-                    <div className="file-card-header">
+                    <div className="file-card-header" onDoubleClick={() => handlePreview(file)} style={{ cursor: 'pointer' }}>
                       <span className="file-type-icon">{getFileIcon(file.filename)}</span>
                       <div className="file-card-title">
                         <p className="file-name" title={file.filename}>

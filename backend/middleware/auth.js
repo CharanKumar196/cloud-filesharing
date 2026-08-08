@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const supabase = require('../config/supabase');
 
 // ============================================
 // PROTECT MIDDLEWARE
@@ -25,14 +25,23 @@ exports.protect = async (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id);
 
-    if (!req.user) {
+    // Fetch user from Supabase using decoded ID
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, full_name, email, username, phone, bio, storage_used, storage_limit')
+      .eq('id', decoded.id)
+      .maybeSingle();
+
+    if (error || !user) {
       return res.status(404).json({ 
         success: false, 
         message: 'User not found' 
       });
     }
+
+    // Attach user to request
+    req.user = user;
 
     next();
   } catch (error) {

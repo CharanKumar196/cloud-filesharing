@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { changePassword } from '../api';
-
+import './tailwind-lite.css';
 const ChangePasswordModal = ({ isOpen, onClose }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -59,8 +59,14 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg p-8 w-96 shadow-2xl border border-blue-500">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+           className="bg-gray-900 rounded-lg p-8 w-96 shadow-2xl border border-blue-500"
+           onClick={(e) => e.stopPropagation()}
+        >
         <h2 className="text-2xl font-bold text-white mb-6">Change Password</h2>
 
         {error && (
