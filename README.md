@@ -338,11 +338,11 @@ This project is licensed under the **MIT License** - see the LICENSE file for de
 
 ## 👨‍💻 Author
 
-**Vishwas** - BCA Student at Sri Sai Vidya First Grade College
+**Charan Kumar** - BCA Student at Sai Vidya First Grade College
 
 - GitHub: [@vishwas-44](https://github.com/vishwas-44)
 - GitHub: [@charankumar196](http://github.com/CharanKumar196)
-- Project Repo: [cloud-file-sharing](https://github.com/vishwas-44/cloud-file-sharing)
+- Project Repo: [cloud-filesharing](https://github.com/CharanKumar196/cloud-filesharing)
 
 ---
 
