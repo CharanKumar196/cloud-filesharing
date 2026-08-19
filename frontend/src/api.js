@@ -261,9 +261,88 @@ export const shareFile = async (fileId, token) => {
 };
 
 // ============================================
-// FOLDER ENDPOINTS
+// PRIVATE SECTION ENDPOINTS
 // ============================================
 
+export const setPrivatePin = async (pin, token) => {
+  const response = await fetch(`${API_URL}/auth/set-private-pin`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ pin })
+  });
+  return response.json();
+};
+
+export const verifyPrivatePin = async (pin, token) => {
+  const response = await fetch(`${API_URL}/auth/verify-private-pin`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ pin })
+  });
+  return response.json();
+};
+
+export const checkPrivatePinExists = async (token) => {
+  const response = await fetch(`${API_URL}/auth/check-private-pin`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+};
+
+export const moveFileToPrivate = async (fileId, token) => {
+  const response = await fetch(`${API_URL}/files/${fileId}/move-to-private`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+};
+
+export const removeFileFromPrivate = async (fileId, token) => {
+  const response = await fetch(`${API_URL}/files/${fileId}/remove-from-private`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+};
+
+export const getPrivateFiles = async (token) => {
+  const response = await fetch(`${API_URL}/files/private`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+};
+
+export const moveFolderToPrivate = async (folderId, token) => {
+  const response = await fetch(`${API_URL}/folders/${folderId}/move-to-private`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+};
+
+export const removeFolderFromPrivate = async (folderId, token) => {
+  const response = await fetch(`${API_URL}/folders/${folderId}/remove-from-private`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+};
+
+export const getPrivateFolders = async (token) => {
+  const response = await fetch(`${API_URL}/folders/private`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+};
+// ============================================
+// FOLDER ENDPOINTS
+// ============================================
 export const createFolder = async (name, token) => {
   const response = await fetch(`${API_URL}/folders`, {
     method: 'POST',
@@ -309,7 +388,56 @@ export const deleteFolder = async (folderId, token) => {
   });
   return response.json();
 };
+export const shareFolder = async (folderId, token) => {
+  const response = await fetch(`${API_URL}/folders/${folderId}/share`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+};
 
+export const archiveFolder = async (folderId, token) => {
+  const response = await fetch(`${API_URL}/folders/${folderId}/archive`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ isArchived: true })
+  });
+  return response.json();
+};
+
+export const unarchiveFolder = async (folderId, token) => {
+  const response = await fetch(`${API_URL}/folders/${folderId}/archive`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ isArchived: false })
+  });
+  return response.json();
+};
+
+export const getArchivedFolders = async (token) => {
+  const response = await fetch(`${API_URL}/folders/archived`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  return response.json();
+};
+
+export const moveFolderToFolder = async (folderId, parentFolderId, token) => {
+  const response = await fetch(`${API_URL}/folders/${folderId}/move`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ parentFolderId })
+  });
+  return response.json();
+};
 export const moveFileToFolder = async (fileId, folderId, token) => {
   const response = await fetch(`${API_URL}/files/${fileId}/move`, {
     method: 'PUT',

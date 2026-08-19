@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
-import { getFiles, uploadFile, deleteFile, getStorageInfo, getRecentFiles, getArchivedFiles, renameFile, archiveFile, unarchiveFile, shareFile, getFolders, createFolder, renameFolder, deleteFolder, getFolderFiles, moveFileToFolder } from '../api';
+import { getFiles, uploadFile, deleteFile, getStorageInfo, getRecentFiles, getArchivedFiles, renameFile, archiveFile, unarchiveFile, shareFile, getFolders, createFolder, renameFolder, deleteFolder, getFolderFiles, moveFileToFolder, setPrivatePin, verifyPrivatePin, checkPrivatePinExists, moveFileToPrivate, removeFileFromPrivate, getPrivateFiles, moveFolderToPrivate, removeFolderFromPrivate, getPrivateFolders, shareFolder, archiveFolder, unarchiveFolder, getArchivedFolders, moveFolderToFolder } from '../api';
 import EditProfileModal from './EditProfileModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import FeedbackModal from './FeedbackModal';
@@ -22,6 +22,7 @@ export default function Dashboard({ token, onLogout }) {
   const [showFileMenu, setShowFileMenu] = useState(null);
   const [activeTab, setActiveTab] = useState('files');
   const [archivedFiles, setArchivedFiles] = useState([]);
+  const [archivedFolders, setArchivedFolders] = useState([]);
   const [currentFolder, setCurrentFolder] = useState(null);
   const [folderPath, setFolderPath] = useState([{ name: 'My Files', id: null }]);
   const [recentFiles, setRecentFiles] = useState([]);
@@ -34,6 +35,17 @@ export default function Dashboard({ token, onLogout }) {
   const [activeFilter, setActiveFilter] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [privateFiles, setPrivateFiles] = useState([]);
+  const [privateFolders, setPrivateFolders] = useState([]);
+  const [isPrivateUnlocked, setIsPrivateUnlocked] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinMode, setPinMode] = useState('verify'); // 'verify' or 'set'
+  const [pinInput, setPinInput] = useState('');
+  const [pinConfirmInput, setPinConfirmInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [privateCurrentFolder, setPrivateCurrentFolder] = useState(null);
+  const [privateFolderPath, setPrivateFolderPath] = useState([{ name: 'Private', id: null }]);
+  const [privateFolderFiles, setPrivateFolderFiles] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -84,19 +96,21 @@ const loadDashboardData = async () => {
       setLoading(true);
     }
 
-    const [filesData,storageData, recentData, foldersData, archivedData] = await Promise.all([
-      getFiles(token),
-      getStorageInfo(token),
-      getRecentFiles(token),
-      getFolders(token),
-      getArchivedFiles(token)
+    const [filesData,storageData, recentData, foldersData, archivedData, archivedFoldersData] = await Promise.all([
+    getFiles(token),
+    getStorageInfo(token),
+    getRecentFiles(token),
+    getFolders(token),
+    getArchivedFiles(token),
+    getArchivedFolders(token)
     ]);
 
-    setFiles(filesData.files || []);
-    setArchivedFiles(archivedData.files || []);
-    setStorageInfo(storageData || { storageUsed: 0, storageLimit: 5 * 1024 * 1024 * 1024 });
-    setRecentFiles(recentData.files || []);
-    setFolders(foldersData.folders || []);
+  setFiles(filesData.files || []);
+  setArchivedFiles(archivedData.files || []);
+  setStorageInfo(storageData || { storageUsed: 0, storageLimit: 5 * 1024 * 1024 * 1024 });
+  setRecentFiles(recentData.files || []);
+  setFolders(foldersData.folders || []);
+  setArchivedFolders(archivedFoldersData.folders || []);
   } catch (error) {
     console.error('Error loading dashboard:', error);
   } finally {
@@ -270,18 +284,19 @@ const loadDashboardData = async () => {
   };
 
   const handleOpenFolder = async (folderId) => {
-    try {
-      const response = await getFolderFiles(folderId, token);
-      if (response.success) {
-        setCurrentFolder(folderId);
-        const folderName = folders.find(f => f._id === folderId)?.name || 'Folder';
-        setFolderPath([...folderPath, { name: folderName, id: folderId }]);
-        setFiles(response.files || []);
-      }
-    } catch (error) {
-      console.error('Error opening folder:', error);
+  try {
+    const response = await getFolderFiles(folderId, token);
+    if (response.success) {
+      setCurrentFolder(folderId);
+      const folderName = folders.find(f => f._id === folderId)?.name || 'Folder';
+      setFolderPath([...folderPath, { name: folderName, id: folderId }]);
+      setFiles(response.files || []);
+      setFolders(response.folders || []);
     }
-  };
+  } catch (error) {
+    console.error('Error opening folder:', error);
+  }
+};
 
   const handleBackFolder = () => {
     if (folderPath.length > 1) {
@@ -326,11 +341,290 @@ const loadDashboardData = async () => {
       }
     }
   };
+  const handleShareFolder = async (folderId, folderName) => {
+  try {
+    const response = await shareFolder(folderId, token);
+    if (response.success) {
+      navigator.clipboard.writeText(response.shareLink);
+      alert('✅ Share link copied to clipboard!\n\n' + response.shareLink);
+      loadDashboardData();
+    } else {
+      alert('❌ Error: ' + response.message);
+    }
+  } catch (error) {
+    console.error('Share folder error:', error);
+    alert('❌ Failed to share folder');
+  }
+};
 
+const handleArchiveFolder = async (folderId) => {
+  try {
+    const response = await archiveFolder(folderId, token);
+    if (response.success) {
+      alert('✅ ' + response.message);
+      loadDashboardData();
+    } else {
+      alert('❌ Error: ' + response.message);
+    }
+  } catch (error) {
+    console.error('Archive folder error:', error);
+    alert('❌ Failed to archive folder');
+  }
+};
+
+const handleUnarchiveFolder = async (folderId) => {
+  try {
+    const response = await unarchiveFolder(folderId, token);
+    if (response.success) {
+      alert('✅ ' + response.message);
+      loadDashboardData();
+    } else {
+      alert('❌ Error: ' + response.message);
+    }
+  } catch (error) {
+    console.error('Unarchive folder error:', error);
+    alert('❌ Failed to unarchive folder');
+  }
+};
+
+const handleMoveFolderToAnotherFolder = async (folderId, folderName) => {
+  const otherFolders = folders.filter(f => f._id !== folderId);
+  if (otherFolders.length === 0) {
+    alert('❌ No other folders available to move into!');
+    return;
+  }
+
+  const folderList = otherFolders.map((f, i) => `${i + 1}. ${f.name}`).join('\n');
+  const folderNumber = prompt(
+    `Select folder to move "${folderName}" into:\n\n${folderList}\n\n(Enter number or leave empty for root)`,
+    ''
+  );
+
+  if (folderNumber === null) return;
+
+  let targetFolderId = null;
+  if (folderNumber && folderNumber.trim() !== '') {
+    const index = parseInt(folderNumber) - 1;
+    if (index >= 0 && index < otherFolders.length) {
+      targetFolderId = otherFolders[index]._id;
+    } else {
+      alert('❌ Invalid folder number!');
+      return;
+    }
+  }
+
+  try {
+    const response = await moveFolderToFolder(folderId, targetFolderId, token);
+    if (response.success) {
+      alert('✅ Folder moved successfully!');
+      loadDashboardData();
+    } else {
+      alert('❌ Error: ' + response.message);
+    }
+  } catch (error) {
+    console.error('Move folder error:', error);
+    alert('❌ Failed to move folder');
+  }
+};
   let filteredFiles = files.filter(f =>
     f.filename.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleOpenPrivateSection = async () => {
+  try {
+    const result = await checkPrivatePinExists(token);
+    if (result.hasPin) {
+      setPinMode('verify');
+    } else {
+      setPinMode('set');
+    }
+    setPinInput('');
+    setPinConfirmInput('');
+    setPinError('');
+    setShowPinModal(true);
+  } catch (error) {
+    console.error('Error checking PIN:', error);
+  }
+};
+
+const handlePinSubmit = async () => {
+  setPinError('');
+
+  if (pinMode === 'set') {
+    if (pinInput.length < 4) {
+      setPinError('PIN must be at least 4 characters');
+      return;
+    }
+    if (pinInput !== pinConfirmInput) {
+      setPinError('PINs do not match');
+      return;
+    }
+    try {
+      const result = await setPrivatePin(pinInput, token);
+      if (result.success) {
+        setShowPinModal(false);
+        await loadPrivateData();
+        setIsPrivateUnlocked(true);
+        setActiveTab('private');
+      } else {
+        setPinError(result.message);
+      }
+    } catch (error) {
+      setPinError('Failed to set PIN');
+    }
+  } else {
+    try {
+      const result = await verifyPrivatePin(pinInput, token);
+      if (result.success) {
+        setShowPinModal(false);
+        await loadPrivateData();
+        setIsPrivateUnlocked(true);
+        setActiveTab('private');
+      } else {
+        setPinError(result.message);
+      }
+    } catch (error) {
+      setPinError('Incorrect PIN');
+    }
+  }
+};
+
+const loadPrivateData = async () => {
+  try {
+    const [filesRes, foldersRes] = await Promise.all([
+      getPrivateFiles(token),
+      getPrivateFolders(token)
+    ]);
+    setPrivateFiles(filesRes.files || []);
+    setPrivateFolders(foldersRes.folders || []);
+  } catch (error) {
+    console.error('Error loading private data:', error);
+  }
+};
+const handleOpenPrivateFolder = async (folderId) => {
+  try {
+    const response = await getFolderFiles(folderId, token);
+    if (response.success) {
+      setPrivateCurrentFolder(folderId);
+      const folderName = privateFolders.find(f => f._id === folderId)?.name || 'Folder';
+      setPrivateFolderPath([...privateFolderPath, { name: folderName, id: folderId }]);
+      setPrivateFolderFiles(response.files || []);
+    }
+  } catch (error) {
+    console.error('Error opening private folder:', error);
+  }
+};
+
+const handleBackPrivateFolder = () => {
+  if (privateFolderPath.length > 1) {
+    const newPath = privateFolderPath.slice(0, -1);
+    setPrivateFolderPath(newPath);
+    if (newPath.length === 1) {
+      setPrivateCurrentFolder(null);
+      setPrivateFolderFiles([]);
+    } else {
+      setPrivateCurrentFolder(newPath[newPath.length - 1].id);
+    }
+  }
+};
+const handleMoveToPrivate = async (fileId) => {
+  try {
+    const response = await moveFileToPrivate(fileId, token);
+    if (response.success) {
+      alert('✅ Moved to Private');
+      loadDashboardData();
+    } else {
+      alert('❌ Error: ' + response.message);
+    }
+  } catch (error) {
+    alert('❌ Failed to move to Private');
+  }
+};
+
+const handleRemoveFromPrivate = async (fileId) => {
+  try {
+    const response = await removeFileFromPrivate(fileId, token);
+    if (response.success) {
+      alert('✅ Removed from Private');
+      loadPrivateData();
+    } else {
+      alert('❌ Error: ' + response.message);
+    }
+  } catch (error) {
+    alert('❌ Failed to remove from Private');
+  }
+};
+const handleMoveToPrivateFolder = async (fileId, fileName) => {
+  const availableFolders = privateFolders.filter(f => f._id !== privateCurrentFolder);
+
+  if (availableFolders.length === 0) {
+    alert('❌ No folders available inside Private. Create one first!');
+    return;
+  }
+
+  const folderList = availableFolders.map((f, i) => `${i + 1}. ${f.name}`).join('\n');
+  const folderNumber = prompt(
+    `Select folder to move "${fileName}" into:\n\n${folderList}\n\n(Enter number or leave empty for root)`,
+    ''
+  );
+
+  if (folderNumber === null) return;
+
+  let targetFolderId = null;
+  if (folderNumber && folderNumber.trim() !== '') {
+    const index = parseInt(folderNumber) - 1;
+    if (index >= 0 && index < availableFolders.length) {
+      targetFolderId = availableFolders[index]._id;
+    } else {
+      alert('❌ Invalid folder number!');
+      return;
+    }
+  }
+
+  try {
+    const response = await moveFileToFolder(fileId, targetFolderId, token);
+    if (response.success) {
+      alert('✅ File moved successfully!');
+      if (privateCurrentFolder !== null) {
+        const refreshed = await getFolderFiles(privateCurrentFolder, token);
+        setPrivateFolderFiles(refreshed.files || []);
+      }
+      loadPrivateData();
+    } else {
+      alert('❌ Error: ' + response.message);
+    }
+  } catch (error) {
+    console.error('Move file error:', error);
+    alert('❌ Failed to move file');
+  }
+};
+const handleMoveFolderToPrivate = async (folderId) => {
+  try {
+    const response = await moveFolderToPrivate(folderId, token);
+    if (response.success) {
+      alert('✅ Folder moved to Private');
+      loadDashboardData();
+    } else {
+      alert('❌ Error: ' + response.message);
+    }
+  } catch (error) {
+    alert('❌ Failed to move folder to Private');
+  }
+};
+
+const handleRemoveFolderFromPrivate = async (folderId) => {
+  try {
+    const response = await removeFolderFromPrivate(folderId, token);
+    if (response.success) {
+      alert('✅ Folder removed from Private');
+      loadPrivateData();
+    } else {
+      alert('❌ Error: ' + response.message);
+    }
+  } catch (error) {
+    alert('❌ Failed to remove folder from Private');
+  }
+};
   const handlePreview = (file) => {
     setPreviewFile(file);
     setIsPreviewOpen(true);
@@ -422,6 +716,7 @@ const loadDashboardData = async () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
+              autoComplete="off"
             />
           </div>
 
@@ -548,6 +843,22 @@ const loadDashboardData = async () => {
                 <span className="stat-text">Media</span>
                 <span className="stat-value">{files.filter(f => f.filename.match(/\.(mp4|avi|mov|mkv)$/i)).length}</span>
               </div>
+              <div 
+                className="stat-item" 
+                onClick={() => {
+                  if (activeTab === 'private' && isPrivateUnlocked) {
+                    setActiveTab('files');
+                    setIsPrivateUnlocked(false);
+                  } else {
+                    handleOpenPrivateSection();
+                  }
+                }}
+                style={{ cursor: 'pointer' }}
+            >
+                <span className="stat-icon">🔒</span>
+                <span className="stat-text">Private</span>
+                <span className="stat-value">{privateFiles.length + privateFolders.length}</span>
+              </div>
             </div>
           </div>
         </aside>
@@ -564,7 +875,7 @@ const loadDashboardData = async () => {
               className={`tab ${activeTab === 'archives' ? 'active' : ''}`}
               onClick={() => setActiveTab('archives')}
             >
-              🗂️ Archives ({archivedFiles.length})
+            🗂️ Archives ({archivedFiles.length + archivedFolders.length})
             </button>
           </div>
 
@@ -612,19 +923,217 @@ const loadDashboardData = async () => {
 
           <div className="files-container">
             {loading ? (
-              <div className="loading-state">
-                <div className="loading-spinner"></div>
-                <p>Loading your files...</p>
-              </div>
-            ) : activeTab === 'archives' ? (
-              archivedFiles.length === 0 ? (
-                <div className="empty-state">
-                  <p className="empty-icon">📭</p>
-                  <p className="empty-text">No archived files.</p>
+  <div className="loading-state">
+    <div className="loading-spinner"></div>
+    <p>Loading your files...</p>
+  </div>
+) : activeTab === 'private' && isPrivateUnlocked ? (
+  <>
+    <div className="folder-header-card">
+      <div className="folder-header-info">
+        <h2 className="folder-header-title">🔒 Private</h2>
+      </div>
+      <button
+        onClick={() => {
+          setActiveTab('files');
+          setIsPrivateUnlocked(false);
+          setPrivateCurrentFolder(null);
+          setPrivateFolderPath([{ name: 'Private', id: null }]);
+          setPrivateFolderFiles([]);
+        }}
+        className="folder-back-btn"
+      >
+        <span className="back-arrow">←</span> Exit Private
+      </button>
+    </div>
+
+    {privateFolderPath.length > 1 && (
+      <div className="folder-header-card">
+        <div className="folder-header-info">
+          <h2 className="folder-header-title">
+            {privateFolderPath[privateFolderPath.length - 1].name}
+          </h2>
+          <div className="folder-header-breadcrumb">
+            {privateFolderPath.map((pathItem, index) => {
+              const isLast = index === privateFolderPath.length - 1;
+              return (
+                <span key={index} className="breadcrumb-item">
+                  {index > 0 && <span className="breadcrumb-sep">/</span>}
+                  <button
+                    onClick={() => {
+                      const newPath = privateFolderPath.slice(0, index + 1);
+                      setPrivateFolderPath(newPath);
+                      setPrivateCurrentFolder(newPath.length === 1 ? null : newPath[newPath.length - 1].id);
+                    }}
+                    className={`breadcrumb-link ${isLast ? 'active' : ''}`}
+                  >
+                    {pathItem.name}
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+        <button onClick={handleBackPrivateFolder} className="folder-back-btn">
+          <span className="back-arrow">←</span> Back
+        </button>
+      </div>
+    )}
+
+    {privateCurrentFolder !== null ? (
+      privateFolderFiles.length === 0 ? (
+        <div className="empty-state">
+          <p className="empty-icon">📭</p>
+          <p className="empty-text">This folder is empty.</p>
+        </div>
+      ) : (
+        <div className="files-list">
+          {privateFolderFiles.map(file => (
+            <div key={file._id} className="file-card">
+              <div className="file-card-header" onDoubleClick={() => handlePreview(file)} style={{ cursor: 'pointer' }}>
+                <span className="file-type-icon">{getFileIcon(file.filename)}</span>
+                <div className="file-card-title">
+                  <p className="file-name" title={file.filename}>{file.filename}</p>
+                  <p className="file-meta">{formatFileSize(file.fileSize)} • {formatDate(file.uploadDate)}</p>
                 </div>
-              ) : (
-                <div className="files-list">
-                  {displayFiles.map(file => (
+              </div>
+              <div className="file-card-actions">
+                <div className="file-menu-container">
+                  <button
+                    className="file-menu-btn"
+                    onClick={(e) => { e.stopPropagation(); toggleMenu(file._id, e); }}
+                    title="More options"
+                  >
+                    ⋮
+                  </button>
+                  {showFileMenu === file._id && (
+                    <div className="file-menu">
+                      <button className="menu-item" onClick={() => { handleShare(file._id, file.filename); toggleMenu(null); }}>🔗 Share</button>
+                      <button className="menu-item" onClick={() => { handlePreview(file); toggleMenu(null); }}>👁️ Preview</button>
+                      <button className="menu-item" onClick={() => { handleRename(file._id, file.filename); toggleMenu(null); }}>✏️ Rename</button>
+                      <button className="menu-item" onClick={() => { handleMoveToPrivateFolder(file._id, file.filename); toggleMenu(null); }}>📂 Move to Folder</button>
+                      <button className="menu-item delete" onClick={() => { handleDelete(file._id); toggleMenu(null); }}>🗑️ Delete</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    ) : privateFiles.length === 0 && privateFolders.length === 0 ? (
+      <div className="empty-state">
+        <p className="empty-icon">🔒</p>
+        <p className="empty-text">Nothing in Private yet.</p>
+      </div>
+    ) : (
+      <div className="files-list">
+        {privateCurrentFolder === null && privateFolders.map(folder => (
+          <div key={folder._id} className="file-card" style={{ borderLeft: `4px solid ${folder.color || '#4A90E2'}` }}>
+            <div className="file-card-header" onDoubleClick={() => handleOpenPrivateFolder(folder._id)} style={{ cursor: 'pointer' }}>
+              <span className="file-type-icon">📂</span>
+              <div className="file-card-title">
+                <p className="file-name" title={folder.name}>{folder.name}</p>
+                <p className="file-meta">Folder • {formatDate(folder.createdAt)}</p>
+              </div>
+            </div>
+            <div className="file-card-actions">
+              <div className="file-menu-container">
+                <button
+                  className="file-menu-btn"
+                  onClick={(e) => { e.stopPropagation(); toggleMenu(folder._id, e); }}
+                  title="More options"
+                >
+                  ⋮
+                </button>
+                {showFileMenu === folder._id && (
+                  <div className="file-menu">
+                  <button className="menu-item" onClick={() => { handleShareFolder(folder._id, folder.name); toggleMenu(null); }}>🔗 Share</button>
+                  <button className="menu-item" onClick={() => { handleRenameFolder(folder._id, folder.name); toggleMenu(null); }}>✏️ Rename</button>
+                  <button className="menu-item" onClick={() => { handleMoveFolderToAnotherFolder(folder._id, folder.name); toggleMenu(null); }}>📂 Move to Folder</button>
+                  <button className="menu-item" onClick={() => { handleRemoveFolderFromPrivate(folder._id); toggleMenu(null); }}>🔓 Remove from Private</button>
+                  <button className="menu-item delete" onClick={() => { handleDeleteFolder(folder._id); toggleMenu(null); }}>🗑️ Delete</button>
+                  </div>
+          )}
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {privateFiles.map(file => (
+          <div key={file._id} className="file-card">
+            <div className="file-card-header" onDoubleClick={() => handlePreview(file)} style={{ cursor: 'pointer' }}>
+              <span className="file-type-icon">{getFileIcon(file.filename)}</span>
+              <div className="file-card-title">
+                <p className="file-name" title={file.filename}>{file.filename}</p>
+                <p className="file-meta">{formatFileSize(file.fileSize)} • {formatDate(file.uploadDate)}</p>
+              </div>
+            </div>
+            <div className="file-card-actions">
+              <div className="file-menu-container">
+                <button
+                  className="file-menu-btn"
+                  onClick={(e) => { e.stopPropagation(); toggleMenu(file._id, e); }}
+                  title="More options"
+                >
+                  ⋮
+                </button>
+                {showFileMenu === file._id && (
+                  <div className="file-menu">
+                    <button className="menu-item" onClick={() => { handleShare(file._id, file.filename); toggleMenu(null); }}>🔗 Share</button>
+                    <button className="menu-item" onClick={() => { handlePreview(file); toggleMenu(null); }}>👁️ Preview</button>
+                    <button className="menu-item" onClick={() => { handleRename(file._id, file.filename); toggleMenu(null); }}>✏️ Rename</button>
+                    <button className="menu-item" onClick={() => { handleMoveToPrivateFolder(file._id, file.filename); toggleMenu(null); }}>📂 Move to Folder</button>
+                    <button className="menu-item" onClick={() => { handleRemoveFromPrivate(file._id); toggleMenu(null); }}>🔓 Remove from Private</button>
+                    <button className="menu-item delete" onClick={() => { handleDelete(file._id); toggleMenu(null); }}>🗑️ Delete</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </>
+      ) : activeTab === 'archives' ? (
+      archivedFiles.length === 0 && archivedFolders.length === 0 ? (
+      <div className="empty-state">
+      <p className="empty-icon">📭</p>
+      <p className="empty-text">No archived items.</p>
+    </div>
+  ) : (
+    <div className="files-list">
+      {archivedFolders.map(folder => (
+        <div key={folder._id} className="file-card" style={{ borderLeft: `4px solid ${folder.color || '#4A90E2'}` }}>
+          <div className="file-card-header">
+            <span className="file-type-icon">📂</span>
+            <div className="file-card-title">
+              <p className="file-name" title={folder.name}>{folder.name}</p>
+              <p className="file-meta">Folder • {formatDate(folder.createdAt)}</p>
+            </div>
+          </div>
+          <div className="file-card-actions">
+            <div className="file-menu-container">
+              <button
+                className="file-menu-btn"
+                onClick={(e) => { e.stopPropagation(); toggleMenu(folder._id, e); }}
+                title="More options"
+              >
+                ⋮
+              </button>
+              {showFileMenu === folder._id && (
+                <div className="file-menu">
+                  <button className="menu-item" onClick={() => { handleRenameFolder(folder._id, folder.name); toggleMenu(null); }}>✏️ Rename</button>
+                  <button className="menu-item" onClick={() => { handleUnarchiveFolder(folder._id); toggleMenu(null); }}>↩️ Unarchive</button>
+                  <button className="menu-item delete" onClick={() => { handleDeleteFolder(folder._id); toggleMenu(null); }}>🗑️ Delete</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {displayFiles.map(file => (
                     <div key={file._id} className="file-card">
                       <div className="file-card-header" onDoubleClick={() => handlePreview(file)} style={{ cursor: 'pointer' }}>
                         <span className="file-type-icon">{getFileIcon(file.filename)}</span>
@@ -653,6 +1162,7 @@ const loadDashboardData = async () => {
                               <button className="menu-item" onClick={() => { handleShare(file._id, file.filename); toggleMenu(null); }}>🔗 Share</button>
                               <button className="menu-item" onClick={() => { handlePreview(file); toggleMenu(null); }}>👁️ Preview</button>
                               <button className="menu-item" onClick={() => { handleMoveToFolder(file._id, file.filename); toggleMenu(null); }}>📂 Move to Folder</button>
+                              <button className="menu-item" onClick={() => { handleMoveToPrivate(file._id); toggleMenu(null); }}>🔒 Move to Private</button>
                               <button className="menu-item" onClick={() => { handleRename(file._id, file.filename); toggleMenu(null); }}>✏️ Rename</button>
                               <button className="menu-item" onClick={() => { handleUnarchive(file._id); toggleMenu(null); }}>↩️ Unarchive</button>
                               <button className="menu-item delete" onClick={() => { handleDelete(file._id); toggleMenu(null); }}>🗑️ Delete</button>
@@ -671,7 +1181,7 @@ const loadDashboardData = async () => {
               </div>
             ) : (
               <div className="files-list">
-                {currentFolder === null && !activeFilter && folders.map(folder => (
+                {!activeFilter && folders.map(folder => (
                   <div key={folder._id} className="file-card" style={{ borderLeft: `4px solid ${folder.color || '#4A90E2'}` }}>
                     <div className="file-card-header" onDoubleClick={() => handleOpenFolder(folder._id)} style={{ cursor: 'pointer' }}>                      <span className="file-type-icon">📂</span>
                       <div className="file-card-title">
@@ -695,10 +1205,14 @@ const loadDashboardData = async () => {
                         </button>
 
                         {showFileMenu === folder._id && (
-                          <div className="file-menu">
-                            <button className="menu-item" onClick={() => { handleRenameFolder(folder._id, folder.name); toggleMenu(null); }}>✏️ Rename</button>
-                            <button className="menu-item delete" onClick={() => { handleDeleteFolder(folder._id); toggleMenu(null); }}>🗑️ Delete</button>
-                          </div>
+                        <div className="file-menu">
+                         <button className="menu-item" onClick={() => { handleShareFolder(folder._id, folder.name); toggleMenu(null); }}>🔗 Share</button>
+                         <button className="menu-item" onClick={() => { handleRenameFolder(folder._id, folder.name); toggleMenu(null); }}>✏️ Rename</button>
+                          <button className="menu-item" onClick={() => { handleArchiveFolder(folder._id); toggleMenu(null); }}>📦 Archive</button>
+                          <button className="menu-item" onClick={() => { handleMoveFolderToAnotherFolder(folder._id, folder.name); toggleMenu(null); }}>📂 Move to Folder</button>
+                          <button className="menu-item" onClick={() => { handleMoveFolderToPrivate(folder._id); toggleMenu(null); }}>🔒 Move to Private</button>
+                          <button className="menu-item delete" onClick={() => { handleDeleteFolder(folder._id); toggleMenu(null); }}>🗑️ Delete</button>
+                         </div>
                         )}
                       </div>
                     </div>
@@ -740,6 +1254,7 @@ const loadDashboardData = async () => {
                             <button className="menu-item" onClick={() => { handleArchive(file._id); toggleMenu(null); }}>📦 Archive</button>
                             <button className="menu-item delete" onClick={() => { handleDelete(file._id); toggleMenu(null); }}>🗑️ Delete</button>
                             <button className="menu-item" onClick={() => { handleMoveToFolder(file._id, file.filename); toggleMenu(null); }}>📂 Move to Folder</button>
+                            <button className="menu-item" onClick={() => { handleMoveToPrivate(file._id); toggleMenu(null); }}>🔒 Move to Private</button>
                           </div>
                         )}
                       </div>
@@ -781,6 +1296,47 @@ const loadDashboardData = async () => {
       <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
       <PreviewModal file={previewFile} isOpen={isPreviewOpen} onClose={() => setIsPreviewOpen(false)} token={token} />
+      {showPinModal && (
+  <div style={{
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    background: 'rgba(0,0,0,0.8)', display: 'flex',
+    alignItems: 'center', justifyContent: 'center', zIndex: 2000
+  }}>
+    <div style={{ background: '#1a1f2e', borderRadius: '12px', padding: '30px', width: '90%', maxWidth: '360px' }}>
+      <h2 style={{ color: 'white', marginBottom: '10px' }}>
+        {pinMode === 'set' ? '🔒 Set Private PIN' : '🔒 Enter Private PIN'}
+      </h2>
+      <p style={{ color: '#999', marginBottom: '20px', fontSize: '14px' }}>
+        {pinMode === 'set' ? 'Create a PIN to protect your Private section.' : 'Enter your PIN to unlock Private.'}
+      </p>
+      <input
+        type="password"
+        placeholder="Enter PIN"
+        value={pinInput}
+        autoComplete="new-password"
+        onChange={(e) => setPinInput(e.target.value)}
+        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: 'none', marginBottom: '10px' }}
+      />
+      {pinMode === 'set' && (
+        <input
+          type="password"
+          placeholder="Confirm PIN"
+          value={pinConfirmInput}
+          autoComplete="new-password"
+          onChange={(e) => setPinConfirmInput(e.target.value)}
+          style={{ width: '100%', padding: '10px', borderRadius: '6px', border: 'none', marginBottom: '10px' }}
+        />
+      )}
+      {pinError && <p style={{ color: '#ff6b6b', fontSize: '13px', marginBottom: '10px' }}>{pinError}</p>}
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button onClick={() => setShowPinModal(false)} style={{ flex: 1, padding: '10px', background: '#444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Cancel</button>
+        <button onClick={handlePinSubmit} style={{ flex: 1, padding: '10px', background: '#4A90E2', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+          {pinMode === 'set' ? 'Set PIN' : 'Unlock'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

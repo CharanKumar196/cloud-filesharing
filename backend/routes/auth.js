@@ -23,5 +23,9 @@ router.post('/logout', authController.logout);
 router.put('/edit-profile', protect, authController.editProfile);
 router.put('/change-password', protect, authController.changePassword);
 router.get('/me', protect, authController.getMe);
+// Private PIN routes
+router.post('/set-private-pin', protect, authController.setPrivatePin);
+router.post('/verify-private-pin', protect, authController.verifyPrivatePin);
+router.get('/check-private-pin', protect, authController.checkPrivatePinExists);
 
 module.exports = router;

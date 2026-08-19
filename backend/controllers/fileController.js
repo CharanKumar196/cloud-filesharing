@@ -80,6 +80,7 @@ exports.getUserFiles = async (req, res) => {
       .eq('user_id', req.user.id)
       .is('folder_id', null)
       .eq('is_archived', false)
+      .eq('is_private', false)
       .order('uploaded_at', { ascending: false });
 
     if (error) throw error;
@@ -235,6 +236,7 @@ exports.getRecentFiles = async (req, res) => {
       .select('*')
       .eq('user_id', req.user.id)
       .is('folder_id', null)
+      .eq('is_private', false)
       .order('uploaded_at', { ascending: false })
       .limit(10);
 
@@ -514,6 +516,97 @@ exports.shareFile = async (req, res) => {
   }
 };
 
+// @route   PUT /api/files/:id/move-to-private
+exports.moveFileToPrivate = async (req, res) => {
+  try {
+    const { data: file, error: fetchErr } = await supabase
+      .from('files')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (fetchErr || !file) {
+      return res.status(404).json({ success: false, message: 'File not found' });
+    }
+    if (file.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const { data: updatedFile, error: updateErr } = await supabase
+      .from('files')
+      .update({ is_private: true })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (updateErr) throw updateErr;
+
+    res.status(200).json({ success: true, message: 'File moved to Private', file: updatedFile });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @route   PUT /api/files/:id/remove-from-private
+exports.removeFileFromPrivate = async (req, res) => {
+  try {
+    const { data: file, error: fetchErr } = await supabase
+      .from('files')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (fetchErr || !file) {
+      return res.status(404).json({ success: false, message: 'File not found' });
+    }
+    if (file.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const { data: updatedFile, error: updateErr } = await supabase
+      .from('files')
+      .update({ is_private: false })
+      .eq('id', req.params.id)
+      .select()
+      .single();
+
+    if (updateErr) throw updateErr;
+
+    res.status(200).json({ success: true, message: 'File removed from Private', file: updatedFile });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @route   GET /api/files/private
+exports.getPrivateFiles = async (req, res) => {
+  try {
+    const { data: files, error } = await supabase
+      .from('files')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .eq('is_private', true)
+      .order('uploaded_at', { ascending: false });
+
+    if (error) throw error;
+
+    res.status(200).json({
+      success: true,
+      count: files.length,
+      files: files.map(f => ({
+        _id: f.id,
+        filename: f.filename,
+        fileSize: f.size,
+        uploadDate: f.uploaded_at,
+        isPublic: f.is_public,
+        isArchived: f.is_archived || false,
+        mimeType: f.mime_type
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 // @route   PUT /api/files/:id/move
 // @desc    Move a file to a folder
 exports.moveFileToFolder = async (req, res) => {
@@ -658,6 +751,7 @@ exports.getArchivedFiles = async (req, res) => {
       .select('*')
       .eq('user_id', req.user.id)
       .eq('is_archived', true)
+      .eq('is_private', false)
       .order('uploaded_at', { ascending: false });
 
     if (error) throw error;

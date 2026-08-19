@@ -16,7 +16,10 @@ const {
   moveFileToFolder,
   getPublicFile,
   getPublicFileDownload,
-  getArchivedFiles
+  getArchivedFiles, 
+  moveFileToPrivate,
+  removeFileFromPrivate,
+  getPrivateFiles
 } = require('../controllers/fileController');
 const { protect } = require('../middleware/auth');
 
@@ -35,6 +38,7 @@ router.get('/archived', protect, getArchivedFiles);
 
 // ✅ SPECIFIC ROUTES FIRST (before /:id)
 router.get('/recent', protect, getRecentFiles);
+router.get('/private', protect, getPrivateFiles);
 router.get('/storage/info', protect, getStorageInfo);
 router.get('/search/:query', protect, searchFiles);
 
@@ -59,5 +63,8 @@ router.delete('/:id', protect, deleteFile);
 
 // Update file
 router.put('/:id', protect, updateFile);
+// Move file to/from Private
+router.put('/:id/move-to-private', protect, moveFileToPrivate);
+router.put('/:id/remove-from-private', protect, removeFileFromPrivate);
 
 module.exports = router;

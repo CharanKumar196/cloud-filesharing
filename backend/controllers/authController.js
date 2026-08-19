@@ -750,7 +750,83 @@ exports.getUserFeedback = async (req, res) => {
     });
   }
 };
- 
+ // ============================================
+// SET PRIVATE PIN
+// ============================================
+exports.setPrivatePin = async (req, res) => {
+  try {
+    const { pin } = req.body;
+
+    if (!pin || pin.trim().length < 4) {
+      return res.status(400).json({ success: false, message: 'PIN must be at least 4 characters' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPin = await bcrypt.hash(pin, salt);
+
+    await supabase
+      .from('users')
+      .update({ private_pin: hashedPin })
+      .eq('id', req.user.id);
+
+    res.status(200).json({ success: true, message: 'Private PIN set successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================
+// VERIFY PRIVATE PIN
+// ============================================
+exports.verifyPrivatePin = async (req, res) => {
+  try {
+    const { pin } = req.body;
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('private_pin')
+      .eq('id', req.user.id)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (!user.private_pin) {
+      return res.status(400).json({ success: false, message: 'No private PIN set yet' });
+    }
+
+    const isMatch = await bcrypt.compare(pin, user.private_pin);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Incorrect PIN' });
+    }
+
+    res.status(200).json({ success: true, message: 'PIN verified' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================
+// CHECK IF PIN EXISTS
+// ============================================
+exports.checkPrivatePinExists = async (req, res) => {
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('private_pin')
+      .eq('id', req.user.id)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({ success: true, hasPin: !!user.private_pin });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 module.exports = {
   register: exports.register,
   login: exports.login,
@@ -765,7 +841,10 @@ module.exports = {
   changePassword: exports.changePassword,
   createFeedback: exports.createFeedback,
   getAllFeedback: exports.getAllFeedback,
-  getUserFeedback: exports.getUserFeedback
+  getUserFeedback: exports.getUserFeedback,
+  setPrivatePin: exports.setPrivatePin,
+  verifyPrivatePin: exports.verifyPrivatePin,
+  checkPrivatePinExists: exports.checkPrivatePinExists,
 };
  
 
