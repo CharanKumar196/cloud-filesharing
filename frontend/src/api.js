@@ -462,3 +462,88 @@ export const getPublicFile = async (fileId) => {
   const response = await fetch(`${API_URL}/files/public/${fileId}`);
   return response.json();
 };
+/*
+  ADD THESE FUNCTIONS TO YOUR EXISTING frontend/src/api.js
+
+  These follow the same fetch + Authorization Bearer token pattern your
+  other functions already use. Adjust the base URL / fetch style to match
+  exactly how your other functions (getFiles, deleteFile, etc.) are written —
+  I don't have your actual api.js, so match its existing conventions.
+
+  Base URL used below: http://localhost:5000/api/trash
+  Change this if your backend uses a different port/prefix.
+*/
+
+const TRASH_BASE = 'http://localhost:5000/api/trash';
+
+// Soft-delete a file: moves it to Trash (does NOT touch S3 yet)
+export async function moveFileToTrash(fileId, token) {
+  const res = await fetch(`${TRASH_BASE}/file/${fileId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
+// Soft-delete a folder (and everything inside it): moves it to Trash
+export async function moveFolderToTrash(folderId, token) {
+  const res = await fetch(`${TRASH_BASE}/folder/${folderId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
+// Get everything currently in Trash for this user
+export async function getTrashItems(token) {
+  const res = await fetch(`${TRASH_BASE}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
+// Restore a file out of Trash back to where it was
+export async function restoreFileFromTrash(fileId, token) {
+  const res = await fetch(`${TRASH_BASE}/file/${fileId}/restore`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
+// Restore a folder out of Trash back to where it was
+export async function restoreFolderFromTrash(folderId, token) {
+  const res = await fetch(`${TRASH_BASE}/folder/${folderId}/restore`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
+// Permanently delete a single file (DB row + S3 object)
+export async function permanentlyDeleteFile(fileId, token) {
+  const res = await fetch(`${TRASH_BASE}/file/${fileId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
+// Permanently delete a single folder (and its contents)
+export async function permanentlyDeleteFolder(folderId, token) {
+  const res = await fetch(`${TRASH_BASE}/folder/${folderId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
+// Permanently delete everything currently in Trash
+export async function emptyTrash(token) {
+  const res = await fetch(`${TRASH_BASE}/empty`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}

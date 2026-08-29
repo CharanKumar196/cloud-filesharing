@@ -18,6 +18,8 @@ export default function Signup() {
   const [codeTimer, setCodeTimer] = useState(300); // 5 minutes
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 
   useEffect(() => {
@@ -200,6 +202,22 @@ const handleStep3 = async (e) => {
     }
   };
 
+  const eyeButtonStyle = {
+    position: 'absolute',
+    right: '10px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    color: '#9ca3af',
+    cursor: 'pointer',
+    fontSize: '1.1rem',
+    padding: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  };
+
   return (
     <div className="auth-container">
       {/* Progress Bar */}
@@ -354,29 +372,49 @@ const handleStep3 = async (e) => {
 
               <div className="form-group">
                 <label htmlFor="password" className="form-label">Create password</label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="form-input"
-                />
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="form-input"
+                    style={{ width: '100%', boxSizing: 'border-box', paddingRight: '40px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    style={eyeButtonStyle}
+                  >
+                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                  </button>
+                </div>
                 <p className="form-helper">Min. 6 characters, include numbers & symbols</p>
               </div>
 
               <div className="form-group">
                 <label htmlFor="confirmPassword" className="form-label">Confirm password</label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="form-input"
-                />
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="form-input"
+                    style={{ width: '100%', boxSizing: 'border-box', paddingRight: '40px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    style={eyeButtonStyle}
+                  >
+                    {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                  </button>
+                </div>
               </div>
 
               <label className="checkbox-label">

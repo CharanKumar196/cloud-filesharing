@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { editProfile } from '../api';
+import './EditProfileModal.css';
 
 const EditProfileModal = ({ isOpen, onClose, userEmail, onProfileUpdate }) => {
   const [fullName, setFullName] = useState('');
@@ -29,7 +30,7 @@ const EditProfileModal = ({ isOpen, onClose, userEmail, onProfileUpdate }) => {
       setFullName('');
       setPhone('');
       setBio('');
-      
+
       if (onProfileUpdate) {
         onProfileUpdate(response.user);
       }
@@ -54,221 +55,59 @@ const EditProfileModal = ({ isOpen, onClose, userEmail, onProfileUpdate }) => {
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="modal-backdrop" 
-      onClick={handleBackdropClick}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999
-      }}
-    >
-      <div 
-        ref={modalRef}
-        className="modal-content"
-        style={{
-          backgroundColor: '#1a1a2e',
-          borderRadius: '12px',
-          padding: '2rem',
-          width: '90%',
-          maxWidth: '450px',
-          border: '1px solid rgba(59, 130, 246, 0.3)',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
-          animation: 'slideDown 0.3s ease-out'
-        }}
-      >
-        <h2 style={{
-          fontSize: '1.5rem',
-          fontWeight: 'bold',
-          color: '#e5e7eb',
-          marginBottom: '1.5rem',
-          marginTop: 0
-        }}>
-          Edit Profile
-        </h2>
+    <div className="modal-overlay" onClick={handleBackdropClick}>
+      <div ref={modalRef} className="modal-content">
+        <div className="modal-header">
+          <h2 className="modal-title">Edit Profile</h2>
+        </div>
 
-        {error && (
-          <div style={{
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.5)',
-            color: '#fca5a5',
-            padding: '0.75rem 1rem',
-            borderRadius: '6px',
-            marginBottom: '1rem',
-            fontSize: '0.9rem'
-          }}>
-            {error}
-          </div>
-        )}
+        {error && <div className="alert-box alert-error">{error}</div>}
+        {success && <div className="alert-box alert-success">{success}</div>}
 
-        {success && (
-          <div style={{
-            backgroundColor: 'rgba(34, 197, 94, 0.15)',
-            border: '1px solid rgba(34, 197, 94, 0.5)',
-            color: '#86efac',
-            padding: '0.75rem 1rem',
-            borderRadius: '6px',
-            marginBottom: '1rem',
-            fontSize: '0.9rem'
-          }}>
-            {success}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form onSubmit={handleSubmit}>
           {/* Full Name Input */}
-          <div>
-            <label style={{
-              display: 'block',
-              color: '#d1d5db',
-              fontSize: '0.875rem',
-              fontWeight: '600',
-              marginBottom: '0.5rem'
-            }}>
-              Full Name
-            </label>
+          <div className="form-group">
+            <label className="form-label">Full Name</label>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Enter your full name"
               required
-              style={{
-                width: '100%',
-                backgroundColor: '#0f0f0f',
-                color: '#e5e7eb',
-                padding: '0.75rem 1rem',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                fontSize: '0.95rem',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-              onBlur={(e) => e.target.style.borderColor = '#333'}
+              className="form-input"
             />
           </div>
 
           {/* Phone Input */}
-          <div>
-            <label style={{
-              display: 'block',
-              color: '#d1d5db',
-              fontSize: '0.875rem',
-              fontWeight: '600',
-              marginBottom: '0.5rem'
-            }}>
-              Phone (Optional)
-            </label>
+          <div className="form-group">
+            <label className="form-label">Phone (Optional)</label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Enter your phone number"
-              style={{
-                width: '100%',
-                backgroundColor: '#0f0f0f',
-                color: '#e5e7eb',
-                padding: '0.75rem 1rem',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                fontSize: '0.95rem',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-              onBlur={(e) => e.target.style.borderColor = '#333'}
+              className="form-input"
             />
           </div>
 
           {/* Bio Input */}
-          <div>
-            <label style={{
-              display: 'block',
-              color: '#d1d5db',
-              fontSize: '0.875rem',
-              fontWeight: '600',
-              marginBottom: '0.5rem'
-            }}>
-              Bio (Optional)
-            </label>
+          <div className="form-group">
+            <label className="form-label">Bio (Optional)</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell us about yourself"
               rows="4"
-              style={{
-                width: '100%',
-                backgroundColor: '#0f0f0f',
-                color: '#e5e7eb',
-                padding: '0.75rem 1rem',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                fontSize: '0.95rem',
-                outline: 'none',
-                resize: 'vertical',
-                transition: 'border-color 0.2s',
-                fontFamily: 'inherit'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-              onBlur={(e) => e.target.style.borderColor = '#333'}
+              className="form-textarea"
             />
           </div>
 
           {/* Buttons */}
-          <div style={{
-            display: 'flex',
-            gap: '1rem',
-            paddingTop: '0.5rem'
-          }}>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                flex: 1,
-                backgroundColor: loading ? '#4b5563' : '#3b82f6',
-                color: 'white',
-                fontWeight: 'bold',
-                padding: '0.75rem 1rem',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '0.95rem',
-                transition: 'background-color 0.2s',
-                opacity: loading ? 0.7 : 1
-              }}
-              onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#2563eb')}
-              onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#3b82f6')}
-            >
+          <div className="modal-actions">
+            <button type="submit" disabled={loading} className="btn btn-primary">
               {loading ? 'Updating...' : 'Update Profile'}
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              style={{
-                flex: 1,
-                backgroundColor: '#374151',
-                color: 'white',
-                fontWeight: 'bold',
-                padding: '0.75rem 1rem',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '0.95rem',
-                transition: 'background-color 0.2s',
-                opacity: loading ? 0.7 : 1
-              }}
-              onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#4b5563')}
-              onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#374151')}
-            >
+            <button type="button" onClick={onClose} disabled={loading} className="btn btn-secondary">
               Cancel
             </button>
           </div>

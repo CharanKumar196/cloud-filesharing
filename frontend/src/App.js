@@ -8,6 +8,7 @@ import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
 import ResetPassword from './components/ResetPassword';
 import SharedFileView from './components/SharedFileView';
+import "./theme-variables.css";
 
 
 function AppContent() {

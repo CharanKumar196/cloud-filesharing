@@ -1,309 +1,164 @@
-import React, { useState, useRef } from 'react';
-import { createFeedback } from '../api';
+import React, { useState, useEffect } from 'react';
+import { downloadFile } from '../api';
+import './PreviewModal.css';
 
-const FeedbackModal = ({ isOpen, onClose }) => {
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
-  const [rating, setRating] = useState(5);
+export default function PreviewModal({
+  file,
+  isOpen,
+  onClose,
+  token,
+  owner = 'You',
+  onShare,
+  onPrev,
+  onNext,
+  hasPrev = false,
+  hasNext = false,
+}) {
+  const [downloadUrl, setDownloadUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const modalRef = useRef(null);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    const token = localStorage.getItem('token');
-
-    const response = await createFeedback(token, {
-      subject,
-      message,
-      rating: parseInt(rating)
-    });
-
-    if (response.success) {
-      setSuccess('Thank you for your feedback!');
-      setSubject('');
-      setMessage('');
-      setRating(5);
-
-      // Close modal after 1.5 seconds
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-    } else {
-      setError(response.message || 'Failed to submit feedback');
+  useEffect(() => {
+    if (isOpen && file) {
+      loadPreview();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, file]);
 
-    setLoading(false);
+  const loadPreview = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setDownloadUrl(null);
+      const response = await downloadFile(file._id, token);
+      if (response.success) {
+        setDownloadUrl(response.downloadUrl);
+      } else {
+        setError('Failed to load preview');
+      }
+    } catch (err) {
+      setError('Error loading file');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle click outside modal to close
-  const handleBackdropClick = (e) => {
-    if (modalRef.current && e.target === e.currentTarget) {
-      onClose();
-    }
+  const getFileType = (filename) => {
+    if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) return 'image';
+    if (filename.match(/\.(pdf)$/i)) return 'pdf';
+    if (filename.match(/\.(mp4|avi|mov|mkv)$/i)) return 'video';
+    return 'other';
+  };
+
+  const getReadableType = (filename) => {
+    if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) return 'Image';
+    if (filename.match(/\.(pdf)$/i)) return 'PDF';
+    if (filename.match(/\.(docx|doc|txt)$/i)) return 'Document';
+    if (filename.match(/\.(zip|rar|7z)$/i)) return 'Archive';
+    if (filename.match(/\.(mp4|avi|mov|mkv)$/i)) return 'Video';
+    return 'File';
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '—';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(Math.max(1, bytes)) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '—';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (!isOpen) return null;
 
+  const fileType = file ? getFileType(file.filename) : 'other';
+
   return (
-    <div
-      className="modal-backdrop"
-      onClick={handleBackdropClick}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999
-      }}
-    >
-      <div
-        ref={modalRef}
-        className="modal-content"
-        style={{
-          backgroundColor: '#1a1a2e',
-          borderRadius: '12px',
-          padding: '2rem',
-          width: '90%',
-          maxWidth: '450px',
-          border: '1px solid rgba(59, 130, 246, 0.3)',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
-          animation: 'slideDown 0.3s ease-out'
-        }}
-      >
-        <h2
-          style={{
-            fontSize: '1.5rem',
-            fontWeight: 'bold',
-            color: '#e5e7eb',
-            marginBottom: '0.5rem',
-            marginTop: 0
-          }}
-        >
-          Send Feedback
-        </h2>
-        <p
-          style={{
-            color: '#9ca3af',
-            fontSize: '0.875rem',
-            marginBottom: '1.5rem',
-            margin: '0.5rem 0 1.5rem 0'
-          }}
-        >
-          Help us improve! Share your thoughts and suggestions.
-        </p>
+    <div className="preview-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="preview-card">
+        {/* Header */}
+        <div className="preview-header">
+          <h2 className="preview-title">{file?.filename}</h2>
+          <button className="preview-close-btn" onClick={onClose}>✕</button>
+        </div>
 
-        {error && (
-          <div
-            style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.5)',
-              color: '#fca5a5',
-              padding: '0.75rem 1rem',
-              borderRadius: '6px',
-              marginBottom: '1rem',
-              fontSize: '0.9rem'
-            }}
-          >
-            {error}
-          </div>
-        )}
+        {/* Preview area with prev/next */}
+        <div className="preview-body">
+          {hasPrev && (
+            <button className="preview-nav-btn prev" onClick={onPrev} title="Previous file">‹</button>
+          )}
 
-        {success && (
-          <div
-            style={{
-              backgroundColor: 'rgba(34, 197, 94, 0.15)',
-              border: '1px solid rgba(34, 197, 94, 0.5)',
-              color: '#86efac',
-              padding: '0.75rem 1rem',
-              borderRadius: '6px',
-              marginBottom: '1rem',
-              fontSize: '0.9rem'
-            }}
-          >
-            {success}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Subject */}
-          <div>
-            <label
-              style={{
-                display: 'block',
-                color: '#d1d5db',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                marginBottom: '0.5rem'
-              }}
-            >
-              Subject
-            </label>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Brief subject"
-              required
-              style={{
-                width: '100%',
-                backgroundColor: '#0f0f0f',
-                color: '#e5e7eb',
-                padding: '0.75rem 1rem',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                fontSize: '0.95rem',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-                boxSizing: 'border-box'
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#3b82f6')}
-              onBlur={(e) => (e.target.style.borderColor = '#333')}
-            />
+          <div className="preview-content">
+            {loading ? (
+              <div className="preview-status">⏳ Loading preview...</div>
+            ) : error ? (
+              <div className="preview-status error">❌ {error}</div>
+            ) : !downloadUrl ? (
+              <div className="preview-status">Preview not available</div>
+            ) : fileType === 'image' ? (
+              <img src={downloadUrl} alt={file.filename} className="preview-image" />
+            ) : fileType === 'pdf' ? (
+              <iframe src={downloadUrl} className="preview-iframe" title="PDF Preview" />
+            ) : fileType === 'video' ? (
+              <video src={downloadUrl} controls className="preview-video" />
+            ) : (
+              <div className="preview-unsupported">
+                <div className="preview-unsupported-icon">📁</div>
+                <p>Preview not available — download to view this file.</p>
+              </div>
+            )}
           </div>
 
-          {/* Feedback Message */}
-          <div>
-            <label
-              style={{
-                display: 'block',
-                color: '#d1d5db',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                marginBottom: '0.5rem'
-              }}
-            >
-              Your Feedback
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Share your thoughts, suggestions, or bug reports"
-              rows="4"
-              required
-              style={{
-                width: '100%',
-                backgroundColor: '#0f0f0f',
-                color: '#e5e7eb',
-                padding: '0.75rem 1rem',
-                border: '1px solid #333',
-                borderRadius: '6px',
-                fontSize: '0.95rem',
-                outline: 'none',
-                resize: 'vertical',
-                transition: 'border-color 0.2s',
-                boxSizing: 'border-box',
-                fontFamily: 'inherit'
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#3b82f6')}
-              onBlur={(e) => (e.target.style.borderColor = '#333')}
-            />
-          </div>
+          {hasNext && (
+            <button className="preview-nav-btn next" onClick={onNext} title="Next file">›</button>
+          )}
+        </div>
 
-          {/* Star Rating */}
-          <div>
-            <label
-              style={{
-                display: 'block',
-                color: '#d1d5db',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                marginBottom: '0.75rem'
-              }}
-            >
-              Rating: <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>{rating}/5</span>
-            </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  style={{
-                    fontSize: '1.75rem',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: star <= rating ? '#fbbf24' : '#4b5563',
-                    transition: 'color 0.2s, transform 0.2s',
-                    padding: '0.25rem',
-                    transform: 'scale(1)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.color = '#fbbf24';
-                    e.target.style.transform = 'scale(1.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.color = star <= rating ? '#fbbf24' : '#4b5563';
-                    e.target.style.transform = 'scale(1)';
-                  }}
-                >
-                  ★
-                </button>
-              ))}
-            </div>
+        {/* Metadata row */}
+        <div className="preview-meta-row">
+          <div className="preview-meta-item">
+            <span className="preview-meta-label">Type</span>
+            <span className="preview-meta-value">{file ? getReadableType(file.filename) : '—'}</span>
           </div>
+          <div className="preview-meta-item">
+            <span className="preview-meta-label">Size</span>
+            <span className="preview-meta-value">{formatFileSize(file?.fileSize)}</span>
+          </div>
+          <div className="preview-meta-item">
+            <span className="preview-meta-label">Modified</span>
+            <span className="preview-meta-value">{formatDate(file?.uploadDate)}</span>
+          </div>
+          <div className="preview-meta-item">
+            <span className="preview-meta-label">Owner</span>
+            <span className="preview-meta-value">{owner}</span>
+          </div>
+        </div>
 
-          {/* Buttons */}
-          <div style={{ display: 'flex', gap: '1rem', paddingTop: '0.5rem' }}>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                flex: 1,
-                backgroundColor: loading ? '#4b5563' : '#3b82f6',
-                color: 'white',
-                fontWeight: 'bold',
-                padding: '0.75rem 1rem',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '0.95rem',
-                transition: 'background-color 0.2s',
-                opacity: loading ? 0.7 : 1
-              }}
-              onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#2563eb')}
-              onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#3b82f6')}
-            >
-              {loading ? 'Sending...' : 'Submit Feedback'}
+        {/* Actions */}
+        <div className="preview-actions">
+          {onShare && (
+            <button className="preview-share-btn" onClick={onShare}>
+              🔗 Share
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              style={{
-                flex: 1,
-                backgroundColor: '#374151',
-                color: 'white',
-                fontWeight: 'bold',
-                padding: '0.75rem 1rem',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '0.95rem',
-                transition: 'background-color 0.2s',
-                opacity: loading ? 0.7 : 1
-              }}
-              onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#4b5563')}
-              onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#374151')}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+          )}
+          <button
+            className="preview-download-btn"
+            onClick={() => window.open(downloadUrl, '_blank')}
+            disabled={!downloadUrl}
+          >
+            ⬇️ Download
+          </button>
+        </div>
       </div>
     </div>
   );
-};
-
-export default FeedbackModal;
+}

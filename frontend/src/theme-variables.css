@@ -1,0 +1,75 @@
+/*
+  Cloud File Sharing — Design Theme
+  Sky blue + cloud white color system.
+  Import this file ONCE in your main App.jsx (or index.js), like:
+      import "./theme-variables.css";
+  Then use these variables in any component's CSS file, e.g.:
+      background: var(--primary);
+      color: var(--foreground);
+*/
+
+:root {
+  /* Base surfaces */
+  --background: #fbfcfe;      /* page background, very light blue-white */
+  --foreground: #313b4f;      /* main text color, dark slate */
+  --card: #ffffff;            /* card / panel background */
+  --card-foreground: #313b4f; /* text on cards */
+
+  /* Primary sky blue */
+  --primary: #0ea5e9;         /* main blue - buttons, links, highlights */
+  --primary-foreground: #ffffff; /* text on primary buttons */
+  --primary-deep: #0284c7;    /* darker blue - hover states */
+  --primary-soft: #e0f2fe;    /* very light blue - backgrounds, badges */
+
+  /* Accent cyan */
+  --cyan: #22b8cf;
+
+  /* Secondary / muted */
+  --secondary: #f1f5f9;           /* light gray-blue background */
+  --secondary-foreground: #334155; /* text on secondary */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;    /* faded/secondary text */
+
+  /* Accent */
+  --accent: #e0f2fe;
+  --accent-foreground: #1c6fa0;
+
+  /* Status colors */
+  --destructive: #dc3d3d;         /* errors, delete buttons */
+  --destructive-foreground: #ffffff;
+  --success: #22b56f;             /* success messages */
+  --warning: #e0a721;             /* warnings */
+
+  /* Borders & inputs */
+  --border: #dceaf7;              /* light blue border */
+  --border-strong: #c3d9ee;       /* slightly darker border */
+  --input: #dceaf7;
+  --ring: #0ea5e9;                /* focus ring color */
+
+  /* Sidebar / navbar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #334155;
+  --sidebar-accent: #e0f2fe;
+  --sidebar-accent-foreground: #1c6fa0;
+  --sidebar-border: #dceaf7;
+
+  /* Corners */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+
+  /* Fonts */
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Outfit", "Figtree", ui-sans-serif, system-ui, sans-serif;
+
+  /* Shadows */
+  --shadow-soft: 0 1px 2px rgba(20, 90, 140, 0.06), 0 8px 24px rgba(20, 90, 140, 0.07);
+  --shadow-lift: 0 12px 32px rgba(20, 90, 140, 0.14);
+  --shadow-glow: 0 10px 30px rgba(14, 165, 233, 0.35);
+
+  /* Gradients */
+  --gradient-sky: linear-gradient(135deg, var(--primary-deep), var(--primary) 45%, var(--cyan));
+  --gradient-mist: linear-gradient(180deg, #eaf6fd 0%, #fcfdff 60%, #ffffff 100%);
+}
