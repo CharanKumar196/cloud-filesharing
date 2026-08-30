@@ -46,13 +46,14 @@ exports.createFolder = async (req, res) => {
 exports.getUserFolders = async (req, res) => {
   try {
     const { data: folders, error } = await supabase
-  .from('folders')
-  .select('*')
-  .eq('user_id', req.user.id)
-  .eq('is_private', false)
-  .eq('is_archived', false)
-  .is('parent_folder_id', null)
-  .order('created_at', { ascending: false });
+      .from('folders')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .eq('is_private', false)
+      .eq('is_archived', false)
+      .is('parent_folder_id', null)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
@@ -91,47 +92,49 @@ exports.getFolderFiles = async (req, res) => {
     }
 
     // Get files inside the folder
-const { data: files, error: fileErr } = await supabase
-  .from('files')
-  .select('*')
-  .eq('folder_id', req.params.id)
-  .eq('user_id', req.user.id)
-  .order('uploaded_at', { ascending: false });
+    const { data: files, error: fileErr } = await supabase
+      .from('files')
+      .select('*')
+      .eq('folder_id', req.params.id)
+      .eq('user_id', req.user.id)
+      .is('deleted_at', null)
+      .order('uploaded_at', { ascending: false });
 
-if (fileErr) throw fileErr;
+    if (fileErr) throw fileErr;
 
-// Get subfolders inside the folder
-const { data: subfolders, error: subfolderErr } = await supabase
-  .from('folders')
-  .select('*')
-  .eq('parent_folder_id', req.params.id)
-  .eq('user_id', req.user.id)
-  .eq('is_private', false)
-  .eq('is_archived', false)
-  .order('created_at', { ascending: false });
+    // Get subfolders inside the folder
+    const { data: subfolders, error: subfolderErr } = await supabase
+      .from('folders')
+      .select('*')
+      .eq('parent_folder_id', req.params.id)
+      .eq('user_id', req.user.id)
+      .eq('is_private', false)
+      .eq('is_archived', false)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
 
-if (subfolderErr) throw subfolderErr;
+    if (subfolderErr) throw subfolderErr;
 
-res.status(200).json({
-  success: true,
-  count: files.length,
-  files: files.map(f => ({
-    _id: f.id,
-    filename: f.filename,
-    fileSize: f.size,
-    uploadDate: f.uploaded_at,
-    isPublic: f.is_public,
-    isArchived: f.is_archived || false,
-    mimeType: f.mime_type
-  })),
-  folders: subfolders.map(f => ({
-    _id: f.id,
-    name: f.name,
-    description: f.description,
-    color: f.color,
-    createdAt: f.created_at
-  }))
-});
+    res.status(200).json({
+      success: true,
+      count: files.length,
+      files: files.map(f => ({
+        _id: f.id,
+        filename: f.filename,
+        fileSize: f.size,
+        uploadDate: f.uploaded_at,
+        isPublic: f.is_public,
+        isArchived: f.is_archived || false,
+        mimeType: f.mime_type
+      })),
+      folders: subfolders.map(f => ({
+        _id: f.id,
+        name: f.name,
+        description: f.description,
+        color: f.color,
+        createdAt: f.created_at
+      }))
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -356,6 +359,7 @@ exports.removeFolderFromPrivate = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // @route   POST /api/folders/:id/share
 // @desc    Generate a share link for a folder
 exports.shareFolder = async (req, res) => {
@@ -446,6 +450,7 @@ exports.getArchivedFolders = async (req, res) => {
       .select('*')
       .eq('user_id', req.user.id)
       .eq('is_archived', true)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -522,6 +527,7 @@ exports.moveFolderToFolder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // @route   GET /api/folders/private
 // @desc    Get all private folders for logged in user
 exports.getPrivateFolders = async (req, res) => {
@@ -531,6 +537,7 @@ exports.getPrivateFolders = async (req, res) => {
       .select('*')
       .eq('user_id', req.user.id)
       .eq('is_private', true)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

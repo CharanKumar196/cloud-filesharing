@@ -11,6 +11,8 @@ const fileUpload = require('express-fileupload');
 // Load environment variables from .env file
 // This file contains: PORT, SUPABASE_URL, SUPABASE_KEY, AWS credentials, etc.
 dotenv.config();
+// Start the daily trash auto-purge job (deletes items in Trash older than 15 days)
+require('./jobs/purgeTrash');
 
 // Create Express application
 const app = express();
@@ -47,6 +49,9 @@ app.use('/api/folders', require('./routes/folders'));
 
 // Feedback routes
 app.use('/api/feedback', require('./routes/feedback'));
+
+// Trash routes
+app.use('/api/trash', require('./routes/trash'));
 
 // ============================================
 // TEST ROUTE

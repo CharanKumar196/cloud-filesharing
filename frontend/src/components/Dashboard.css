@@ -423,7 +423,30 @@
   box-shadow: var(--shadow-soft, 0 1px 2px rgba(20, 90, 140, 0.08));
 }
 
+.new-folder-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  background: var(--card, #ffffff);
+  color: var(--secondary-foreground, #334155);
+  border: 1px solid var(--border, #dceaf7);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.new-folder-btn:hover {
+  background: var(--secondary, #f1f5f9);
+  border-color: var(--primary, #0ea5e9);
+  color: var(--primary, #0ea5e9);
+}
+
 .upload-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.6rem 1.1rem;
   background: var(--gradient-sky, linear-gradient(135deg, #0284c7, #0ea5e9));
   color: white;
@@ -1274,9 +1297,17 @@
 }
 
 .pin-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--foreground, #313b4f);
   margin-bottom: 10px;
   font-size: 1.2rem;
+}
+
+.pin-modal-icon {
+  color: var(--primary, #0ea5e9);
+  flex-shrink: 0;
 }
 
 .pin-modal-subtitle {

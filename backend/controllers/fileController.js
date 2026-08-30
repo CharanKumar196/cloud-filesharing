@@ -11,6 +11,26 @@ exports.uploadFile = async (req, res) => {
 
     const fileObj = req.files.file;
 
+    // NEW: read folderId sent from the frontend (may be undefined/empty for root uploads)
+    const folderId = (req.body && req.body.folderId) || null;
+
+    // If a folderId was sent, verify the user actually owns that folder
+    // before saving the file into it (same check your moveFileToFolder route does).
+    if (folderId) {
+      const { data: folder, error: folderError } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('id', folderId)
+        .maybeSingle();
+
+      if (folderError || !folder) {
+        return res.status(404).json({ success: false, message: 'Folder not found' });
+      }
+      if (folder.user_id !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Not authorized to upload to this folder' });
+      }
+    }
+
     // Fetch user storage info from Supabase
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -24,9 +44,9 @@ exports.uploadFile = async (req, res) => {
 
     // Check storage limit
     if (user.storage_used + fileObj.size > user.storage_limit) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Storage limit exceeded' 
+      return res.status(400).json({
+        success: false,
+        message: 'Storage limit exceeded'
       });
     }
 
@@ -37,7 +57,7 @@ exports.uploadFile = async (req, res) => {
     // Upload to S3
     await uploadFile(s3Key, fileObj.data, fileObj.mimetype);
 
-    // Save file metadata to Supabase
+    // Save file metadata to Supabase — NOW includes folder_id
     const { data: newFile, error: fileError } = await supabase
       .from('files')
       .insert([{
@@ -47,6 +67,7 @@ exports.uploadFile = async (req, res) => {
         size: fileObj.size,
         mime_type: fileObj.mimetype,
         s3_key: s3Key,
+        folder_id: folderId,          // <-- the actual fix
         uploaded_at: new Date().toISOString()
       }])
       .select()
@@ -69,7 +90,6 @@ exports.uploadFile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // @route   GET /api/files
 // @desc    Get all files for logged in user
 exports.getUserFiles = async (req, res) => {
@@ -81,8 +101,9 @@ exports.getUserFiles = async (req, res) => {
       .is('folder_id', null)
       .eq('is_archived', false)
       .eq('is_private', false)
+      .is('deleted_at', null)          // ADD THIS LINE
       .order('uploaded_at', { ascending: false });
-
+  
     if (error) throw error;
 
     res.status(200).json({
@@ -232,13 +253,14 @@ exports.getStorageInfo = async (req, res) => {
 exports.getRecentFiles = async (req, res) => {
   try {
     const { data: files, error } = await supabase
-      .from('files')
-      .select('*')
-      .eq('user_id', req.user.id)
-      .is('folder_id', null)
-      .eq('is_private', false)
-      .order('uploaded_at', { ascending: false })
-      .limit(10);
+    .from('files')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .is('folder_id', null)
+    .eq('is_private', false)
+    .is('deleted_at', null)          // ADD THIS LINE
+    .order('uploaded_at', { ascending: false })
+    .limit(10);
 
     if (error) throw error;
 
@@ -582,11 +604,12 @@ exports.removeFileFromPrivate = async (req, res) => {
 exports.getPrivateFiles = async (req, res) => {
   try {
     const { data: files, error } = await supabase
-      .from('files')
-      .select('*')
-      .eq('user_id', req.user.id)
-      .eq('is_private', true)
-      .order('uploaded_at', { ascending: false });
+    .from('files')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .eq('is_private', true)
+    .is('deleted_at', null)          // ADD THIS LINE
+    .order('uploaded_at', { ascending: false });
 
     if (error) throw error;
 
@@ -752,6 +775,7 @@ exports.getArchivedFiles = async (req, res) => {
       .eq('user_id', req.user.id)
       .eq('is_archived', true)
       .eq('is_private', false)
+      .is('deleted_at', null)          // ADD THIS LINE
       .order('uploaded_at', { ascending: false });
 
     if (error) throw error;

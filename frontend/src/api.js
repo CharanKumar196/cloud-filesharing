@@ -71,14 +71,23 @@ export const resetPassword = async (email, code, newPassword) => {
 // FILE ENDPOINTS
 // ============================================
 
-export const uploadFile = async (file, token, onProgress) => {
+// Replace your existing uploadFile function in api.js with this one.
+// Added: folderId param (4th), appended to formData so uploads land in the
+// right folder instead of always going to root.
+
+// Fix: append folderId BEFORE file in the FormData.
+// Most Express upload middleware (multer) needs non-file fields to arrive
+// before the file field in the multipart stream, or req.body.folderId
+// won't be populated on the backend — even though the frontend sent it.
+
+export const uploadFile = async (file, token, onProgress, folderId) => {
   const formData = new FormData();
+  if (folderId) formData.append('folderId', folderId); // <-- moved before file
   formData.append('file', file);
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
-    // Track upload progress
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable) {
         const percentComplete = (e.loaded / e.total) * 100;
@@ -462,6 +471,7 @@ export const getPublicFile = async (fileId) => {
   const response = await fetch(`${API_URL}/files/public/${fileId}`);
   return response.json();
 };
+
 /*
   ADD THESE FUNCTIONS TO YOUR EXISTING frontend/src/api.js
 

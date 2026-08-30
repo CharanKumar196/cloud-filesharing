@@ -5,6 +5,7 @@ import EditProfileModal from './EditProfileModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import FeedbackModal from './FeedbackModal';
 import PreviewModal from './PreviewModal';
+import UploadModal from './UploadModal';
 import CloudLogo from '../components/CloudLogo';
 
 // ---- Simple line-style icons (replace emoji for a cleaner look) ----
@@ -172,6 +173,14 @@ const IconDeleteForever = (props) => (
   </svg>
 );
 
+const IconFolderPlus = (props) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z" />
+    <line x1="12" y1="11" x2="12" y2="17" />
+    <line x1="9" y1="14" x2="15" y2="14" />
+  </svg>
+);
+
 export default function Dashboard({ token, onLogout }) {
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
@@ -180,6 +189,7 @@ export default function Dashboard({ token, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [userName, setUserName] = useState('User');
   const [showSidebar, setShowSidebar] = useState(false);
   const [userEmail, setUserEmail] = useState('user@example.com');
@@ -312,6 +322,67 @@ export default function Dashboard({ token, onLogout }) {
     }
   };
 
+  // Uploads one file, placing it in the right spot depending on where the
+  // person is browsing (My Files folder / Private / Archive). Used by both
+  // the classic hidden file input and the new drag-and-drop UploadModal.
+  // Calls onProgress(percent) as the upload streams.
+  const uploadSingleFile = async (file, onProgress) => {
+    const targetFolderId = activeTab === 'files' ? currentFolder : null;
+
+    const uploadResponse = await uploadFile(file, token, onProgress, targetFolderId);
+
+    const newFileId =
+      uploadResponse?.file?._id ||
+      uploadResponse?.file?.id ||
+      uploadResponse?.fileId ||
+      uploadResponse?._id ||
+      null;
+
+    if (activeTab === 'private' && newFileId) {
+      try {
+        await moveFileToPrivate(newFileId, token);
+        if (privateCurrentFolder) {
+          await moveFileToFolder(newFileId, privateCurrentFolder, token);
+        }
+      } catch (err) {
+        console.error('Failed to move uploaded file into Private:', err);
+      }
+    } else if (activeTab === 'archives' && newFileId) {
+      try {
+        await archiveFile(newFileId, token);
+      } catch (err) {
+        console.error('Failed to archive uploaded file:', err);
+      }
+    }
+
+    return uploadResponse;
+  };
+
+  // Refreshes whichever view is currently open after one or more uploads finish.
+  const refreshAfterUpload = async () => {
+    const targetFolderId = activeTab === 'files' ? currentFolder : null;
+
+    if (activeTab === 'files' && targetFolderId) {
+      const response = await getFolderFiles(targetFolderId, token);
+      if (response.success) {
+        setFiles(response.files || []);
+        setFolders(response.folders || []);
+      }
+    } else if (activeTab === 'private') {
+      if (privateCurrentFolder) {
+        const refreshed = await getFolderFiles(privateCurrentFolder, token);
+        setPrivateFolderFiles(refreshed.files || []);
+      } else {
+        await loadPrivateData();
+      }
+      loadDashboardData();
+    } else {
+      loadDashboardData();
+    }
+  };
+
+  // Classic single-file input handler (kept for the hidden <input>, still
+  // used as a fallback / for any leftover direct triggers).
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -320,20 +391,13 @@ export default function Dashboard({ token, onLogout }) {
     setUploadProgress(0);
 
     try {
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + Math.random() * 25, 85));
-      }, 150);
-
-      await uploadFile(file, token);
-
-      clearInterval(progressInterval);
+      await uploadSingleFile(file, (percent) => setUploadProgress(percent));
       setUploadProgress(100);
-
-      setTimeout(() => {
+      setTimeout(async () => {
         setUploading(false);
         setUploadProgress(0);
-        loadDashboardData();
-      }, 500);
+        await refreshAfterUpload();
+      }, 400);
     } catch (error) {
       console.error('Upload error:', error);
       setUploading(false);
@@ -1313,12 +1377,6 @@ export default function Dashboard({ token, onLogout }) {
             ))}
           </nav>
 
-          <button className="sidebar-upload-btn" onClick={() => fileInputRef.current?.click()}>
-            <span>☁️</span> Upload
-          </button>
-          <button className="sidebar-upload-btn secondary" onClick={handleCreateFolder}>
-            <span>📁</span> New Folder
-          </button>
           <input
             ref={fileInputRef}
             type="file"
@@ -1395,9 +1453,16 @@ export default function Dashboard({ token, onLogout }) {
                   <IconListView />
                 </button>
               </div>
-              <button className="upload-btn-primary" onClick={() => fileInputRef.current?.click()}>
-                ☁️ Upload
-              </button>
+              {activeTab === 'files' && (
+                <button className="new-folder-btn" onClick={handleCreateFolder}>
+                  <IconFolderPlus /> New Folder
+                </button>
+              )}
+              {activeTab !== 'trash' && (
+                <button className="upload-btn-primary" onClick={() => setIsUploadModalOpen(true)}>
+                  ☁️ Upload
+                </button>
+              )}
             </div>
           </div>
 
@@ -1987,11 +2052,19 @@ export default function Dashboard({ token, onLogout }) {
         hasNext={previewIndex < previewFileList.length - 1}
       />
 
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onUploadFile={uploadSingleFile}
+        onAllComplete={refreshAfterUpload}
+      />
+
       {showPinModal && (
         <div className="pin-modal-overlay">
           <div className="pin-modal-card">
             <h2 className="pin-modal-title">
-              {pinMode === 'set' ? '🔒 Set Private PIN' : '🔒 Enter Private PIN'}
+              <IconLock className="pin-modal-icon" />
+              {pinMode === 'set' ? 'Set Private PIN' : 'Enter Private PIN'}
             </h2>
             <p className="pin-modal-subtitle">
               {pinMode === 'set' ? 'Create a PIN to protect your Private section.' : 'Enter your PIN to unlock Private.'}
