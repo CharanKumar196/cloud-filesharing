@@ -3,9 +3,11 @@ import './Dashboard.css';
 import { getFiles, uploadFile, deleteFile, getStorageInfo, getRecentFiles, getArchivedFiles, renameFile, archiveFile, unarchiveFile, shareFile, getFolders, createFolder, renameFolder, deleteFolder, getFolderFiles, moveFileToFolder, setPrivatePin, verifyPrivatePin, checkPrivatePinExists, moveFileToPrivate, removeFileFromPrivate, getPrivateFiles, moveFolderToPrivate, removeFolderFromPrivate, getPrivateFolders, shareFolder, archiveFolder, unarchiveFolder, getArchivedFolders, moveFolderToFolder, editProfile, moveFileToTrash, moveFolderToTrash, getTrashItems, restoreFileFromTrash, restoreFolderFromTrash, permanentlyDeleteFile, permanentlyDeleteFolder, emptyTrash } from '../api';
 import EditProfileModal from './EditProfileModal';
 import ChangePasswordModal from './ChangePasswordModal';
+import { createFeedback } from '../api';
 import FeedbackModal from './FeedbackModal';
 import PreviewModal from './PreviewModal';
 import UploadModal from './UploadModal';
+import { useTheme } from '../context/ThemeContext';
 import CloudLogo from '../components/CloudLogo';
 
 // ---- Simple line-style icons (replace emoji for a cleaner look) ----
@@ -84,6 +86,17 @@ const IconFolder = (props) => (
     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2Z" />
   </svg>
 );
+const IconSun = (props) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="12" r="5" />
+    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+  </svg>
+);
+const IconMoon = (props) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+  </svg>
+);
 const IconGridView = (props) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -107,6 +120,12 @@ const IconUser = (props) => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
     <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+const IconBell = (props) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
   </svg>
 );
 const IconKey = (props) => (
@@ -248,6 +267,7 @@ export default function Dashboard({ token, onLogout }) {
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackHoverRating, setFeedbackHoverRating] = useState(0);
   const [feedbackSentMessage, setFeedbackSentMessage] = useState('');
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     loadDashboardData();
@@ -1009,6 +1029,32 @@ export default function Dashboard({ token, onLogout }) {
     return Math.max(0, daysLeft);
   };
 
+  const handleSubmitFeedback = async () => {
+  if (!feedbackSubject.trim() || !feedbackMessage.trim()) {
+    setFeedbackSentMessage('Please fill in subject and message.');
+    setTimeout(() => setFeedbackSentMessage(''), 2500);
+    return;
+  }
+  try {
+    const res = await createFeedback(token, {
+      subject: feedbackSubject,
+      message: feedbackMessage,
+      rating: feedbackRating,
+    });
+    if (res.success) {
+      setFeedbackSentMessage('Thanks for your feedback!');
+      setFeedbackSubject('');
+      setFeedbackMessage('');
+      setFeedbackRating(5);
+    } else {
+      setFeedbackSentMessage(res.message || 'Failed to send feedback.');
+    }
+  } catch (err) {
+    setFeedbackSentMessage('Something went wrong. Please try again.');
+  }
+  setTimeout(() => setFeedbackSentMessage(''), 2500);
+};
+
   const handleSaveInlineProfile = async (e) => {
     e.preventDefault();
     setProfileSaving(true);
@@ -1290,12 +1336,12 @@ export default function Dashboard({ token, onLogout }) {
       <header className="app-header">
         <div className="app-header-left">
           <button
-            className="sidebar-menu-btn mobile-only"
-            onClick={() => setShowSidebar(!showSidebar)}
-            title="Menu"
-          >
-            ☰
-          </button>
+          className={`sidebar-menu-btn mobile-only ${showSidebar ? 'active' : ''}`}
+          onClick={() => setShowSidebar(!showSidebar)}
+          title="Menu"
+        >
+          ☰
+        </button>
           <div className="app-logo">
             <CloudLogo width={28} height={28} color="#0ea5e9" />
             <span className="app-logo-text">Cloud File Sharing</span>
@@ -1317,6 +1363,20 @@ export default function Dashboard({ token, onLogout }) {
           />
         </div>
 
+        <button
+          className="notification-bell-btn"
+          onClick={() => goToSettingsTab('notifications')}
+          title="Notifications"
+        >
+          <IconBell />
+        </button>
+        <button
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            title="Toggle theme"
+          >
+            {theme === 'light' ? <IconMoon /> : <IconSun />}
+          </button>
         <div className="user-menu-wrapper" ref={dropdownRef}>
           <button
             className="user-profile-btn"
@@ -1384,6 +1444,12 @@ export default function Dashboard({ token, onLogout }) {
             className="hidden-input"
           />
         </aside>
+        {showSidebar && (
+          <div
+            className="sidebar-overlay"
+            onClick={() => setShowSidebar(false)}
+          />
+        )}
 
         {/* ===== Main Content ===== */}
         <main className="app-main">
@@ -1978,13 +2044,7 @@ export default function Dashboard({ token, onLogout }) {
 
                       <button
                         className="settings-save-btn"
-                        onClick={() => {
-                          setFeedbackSentMessage('Thanks for your feedback!');
-                          setFeedbackSubject('');
-                          setFeedbackMessage('');
-                          setFeedbackRating(5);
-                          setTimeout(() => setFeedbackSentMessage(''), 2500);
-                        }}
+                        onClick={handleSubmitFeedback}
                       >
                         Submit Feedback
                       </button>

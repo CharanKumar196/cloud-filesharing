@@ -557,3 +557,71 @@ export async function emptyTrash(token) {
   });
   return res.json();
 }
+// ============================================
+// ADMIN API
+// ============================================
+const ADMIN_BASE = 'http://localhost:5000/api/admin';
+
+export const checkIsAdmin = async (token) => {
+  const res = await fetch(`${ADMIN_BASE}/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return { success: false, isAdmin: false };
+  return res.json();
+};
+
+export const getAdminOverview = async (token) => {
+  const res = await fetch(`${ADMIN_BASE}/overview`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+};
+
+export const getAdminFeedback = async (token, { rating, reviewed } = {}) => {
+  const params = new URLSearchParams();
+  if (rating) params.set('rating', rating);
+  if (reviewed !== undefined) params.set('reviewed', reviewed);
+  const res = await fetch(`${ADMIN_BASE}/feedback?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+};
+
+export const markFeedbackReviewed = async (token, id, reviewed) => {
+  const res = await fetch(`${ADMIN_BASE}/feedback/${id}/review`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ reviewed }),
+  });
+  return res.json();
+};
+
+export const getAdminTrash = async (token) => {
+  const res = await fetch(`${ADMIN_BASE}/trash`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+};
+
+export const getAdminPurgeLog = async (token) => {
+  const res = await fetch(`${ADMIN_BASE}/trash/purge-log`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+};
+
+export const getAdminSettings = async (token) => {
+  const res = await fetch(`${ADMIN_BASE}/settings`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+};
+
+export const updateAdminSettings = async (token, settings) => {
+  const res = await fetch(`${ADMIN_BASE}/settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(settings),
+  });
+  return res.json();
+};

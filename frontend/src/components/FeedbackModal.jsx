@@ -1,163 +1,114 @@
-import React, { useState, useEffect } from 'react';
-import { downloadFile } from '../api';
-import './PreviewModal.css';
+import React, { useState } from 'react';
+import { createFeedback } from '../api';
+import './FeedbackModal.css';
 
-export default function PreviewModal({
-  file,
-  isOpen,
-  onClose,
-  token,
-  owner = 'You',
-  onShare,
-  onPrev,
-  onNext,
-  hasPrev = false,
-  hasNext = false,
-}) {
-  const [downloadUrl, setDownloadUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
+export default function FeedbackModal({ isOpen, onClose, token }) {
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [rating, setRating] = useState(5);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && file) {
-      loadPreview();
+  const resetForm = () => {
+    setSubject('');
+    setMessage('');
+    setRating(5);
+    setError(null);
+    setSuccess(false);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!subject.trim() || !message.trim()) {
+      setError('Please fill in both subject and message.');
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, file]);
-
-  const loadPreview = async () => {
+    setSubmitting(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      setDownloadUrl(null);
-      const response = await downloadFile(file._id, token);
-      if (response.success) {
-        setDownloadUrl(response.downloadUrl);
+      const res = await createFeedback(token, { subject, message, rating });
+      if (res.success) {
+        setSuccess(true);
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
       } else {
-        setError('Failed to load preview');
+        setError(res.message || 'Failed to submit feedback.');
       }
     } catch (err) {
-      setError('Error loading file');
+      setError('Something went wrong. Please try again.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-  };
-
-  const getFileType = (filename) => {
-    if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) return 'image';
-    if (filename.match(/\.(pdf)$/i)) return 'pdf';
-    if (filename.match(/\.(mp4|avi|mov|mkv)$/i)) return 'video';
-    return 'other';
-  };
-
-  const getReadableType = (filename) => {
-    if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) return 'Image';
-    if (filename.match(/\.(pdf)$/i)) return 'PDF';
-    if (filename.match(/\.(docx|doc|txt)$/i)) return 'Document';
-    if (filename.match(/\.(zip|rar|7z)$/i)) return 'Archive';
-    if (filename.match(/\.(mp4|avi|mov|mkv)$/i)) return 'Video';
-    return 'File';
-  };
-
-  const formatFileSize = (bytes) => {
-    if (!bytes || bytes === 0) return '—';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(Math.max(1, bytes)) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  const formatDate = (date) => {
-    if (!date) return '—';
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   if (!isOpen) return null;
 
-  const fileType = file ? getFileType(file.filename) : 'other';
-
   return (
-    <div className="preview-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="preview-card">
-        {/* Header */}
-        <div className="preview-header">
-          <h2 className="preview-title">{file?.filename}</h2>
-          <button className="preview-close-btn" onClick={onClose}>✕</button>
+    <div className="feedback-overlay" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+      <div className="feedback-card">
+        <div className="feedback-header">
+          <h2 className="feedback-title">Send Feedback</h2>
+          <button className="feedback-close-btn" onClick={handleClose}>✕</button>
         </div>
 
-        {/* Preview area with prev/next */}
-        <div className="preview-body">
-          {hasPrev && (
-            <button className="preview-nav-btn prev" onClick={onPrev} title="Previous file">‹</button>
-          )}
+        {success ? (
+          <div className="feedback-success">✅ Thanks for your feedback!</div>
+        ) : (
+          <form className="feedback-form" onSubmit={handleSubmit}>
+            <div className="feedback-field">
+              <label className="feedback-label">Subject</label>
+              <input
+                className="feedback-input"
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="What's this about?"
+                maxLength={100}
+              />
+            </div>
 
-          <div className="preview-content">
-            {loading ? (
-              <div className="preview-status">⏳ Loading preview...</div>
-            ) : error ? (
-              <div className="preview-status error">❌ {error}</div>
-            ) : !downloadUrl ? (
-              <div className="preview-status">Preview not available</div>
-            ) : fileType === 'image' ? (
-              <img src={downloadUrl} alt={file.filename} className="preview-image" />
-            ) : fileType === 'pdf' ? (
-              <iframe src={downloadUrl} className="preview-iframe" title="PDF Preview" />
-            ) : fileType === 'video' ? (
-              <video src={downloadUrl} controls className="preview-video" />
-            ) : (
-              <div className="preview-unsupported">
-                <div className="preview-unsupported-icon">📁</div>
-                <p>Preview not available — download to view this file.</p>
+            <div className="feedback-field">
+              <label className="feedback-label">Message</label>
+              <textarea
+                className="feedback-textarea"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Tell us more..."
+                rows={5}
+                maxLength={1000}
+              />
+            </div>
+
+            <div className="feedback-field">
+              <label className="feedback-label">Rating</label>
+              <div className="feedback-stars">
+                {[1, 2, 3, 4, 5].map((r) => (
+                  <button
+                    type="button"
+                    key={r}
+                    className={`feedback-star-btn ${r <= rating ? 'active' : ''}`}
+                    onClick={() => setRating(r)}
+                  >
+                    ★
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
 
-          {hasNext && (
-            <button className="preview-nav-btn next" onClick={onNext} title="Next file">›</button>
-          )}
-        </div>
+            {error && <div className="feedback-error">{error}</div>}
 
-        {/* Metadata row */}
-        <div className="preview-meta-row">
-          <div className="preview-meta-item">
-            <span className="preview-meta-label">Type</span>
-            <span className="preview-meta-value">{file ? getReadableType(file.filename) : '—'}</span>
-          </div>
-          <div className="preview-meta-item">
-            <span className="preview-meta-label">Size</span>
-            <span className="preview-meta-value">{formatFileSize(file?.fileSize)}</span>
-          </div>
-          <div className="preview-meta-item">
-            <span className="preview-meta-label">Modified</span>
-            <span className="preview-meta-value">{formatDate(file?.uploadDate)}</span>
-          </div>
-          <div className="preview-meta-item">
-            <span className="preview-meta-label">Owner</span>
-            <span className="preview-meta-value">{owner}</span>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="preview-actions">
-          {onShare && (
-            <button className="preview-share-btn" onClick={onShare}>
-              🔗 Share
+            <button type="submit" className="feedback-submit-btn" disabled={submitting}>
+              {submitting ? 'Sending...' : 'Submit Feedback'}
             </button>
-          )}
-          <button
-            className="preview-download-btn"
-            onClick={() => window.open(downloadUrl, '_blank')}
-            disabled={!downloadUrl}
-          >
-            ⬇️ Download
-          </button>
-        </div>
+          </form>
+        )}
       </div>
     </div>
   );

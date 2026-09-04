@@ -32,38 +32,71 @@ export default function LandingPage() {
       {/* Background Gradient */}
       <div className="landing-gradient-bg"></div>
 
-      {/* Floating Glows */}
+      {/* Floating Clouds */}
       <div className="landing-glow landing-glow-1"></div>
       <div className="landing-glow landing-glow-2"></div>
       <div className="landing-glow landing-glow-3"></div>
+
+      {/* Navbar */}
+      <nav className="navbar">
+        <div className="navbar-content">
+          <div className="logo">
+            <span className="logo-icon">☁️</span>
+            <span className="logo-text">Cloud File Sharing</span>
+          </div>
+          <div className="navbar-buttons">
+            <button
+              className="navbar-btn navbar-login"
+              onClick={() => navigate('/login')}
+            >
+              Login
+            </button>
+            <button
+              className="navbar-btn navbar-signup"
+              onClick={() => navigate('/signup')}
+            >
+              Sign up
+            </button>
+          </div>
+        </div>
+      </nav>
 
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
           <div className={`hero-text ${pageReady ? 'slide-up' : ''}`}>
+            <div className="hero-badge">
+              <svg className="hero-badge-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 10V8a6 6 0 1112 0v2m-13 0h14a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9a1 1 0 011-1z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Encrypted storage &middot; 15 GB free</span>
+            </div>
+
             <h1 className="hero-title">
-              Cloud File Sharing
-              <span className="gradient-text"> Made Easy</span>
+              Keep every file
+              <span className="gradient-text">up in the clouds</span>
             </h1>
+
             <p className="hero-subtitle">
-              Upload, organize, and share your files with end-to-end encryption. 
-              Your data, your control, always secure.
+              Upload, organize and share anything &mdash; folder navigation, live progress
+              and signed links, in one calm sky-blue workspace.
             </p>
+
             <div className="hero-buttons">
-              <button 
-                className="btn btn-primary"
+              <button
+                className="btn btn-primary btn-large"
                 onClick={() => navigate('/signup')}
               >
-                <span>Start Sharing Now</span>
+                <span>Create free account</span>
                 <svg className="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => navigate('/login')}
+              <button
+                className="btn btn-secondary btn-large"
+                onClick={() => navigate('/dashboard')}
               >
-                <span>Sign In</span>
+                <span>Explore the dashboard</span>
               </button>
             </div>
           </div>
@@ -108,8 +141,8 @@ export default function LandingPage() {
       {/* Features Section */}
       <section className="features" id="features">
         <div className="section-header">
-          <h2 className="section-title">Why Choose cloud-file-sharing?</h2>
-          <p className="section-subtitle">Everything you need for secure file management</p>
+          <h2 className="section-title">Why choose Cloud File Sharing?</h2>
+          <p className="section-subtitle">Everything you need for calm, secure file management</p>
         </div>
 
         <div className="features-grid">
@@ -120,7 +153,7 @@ export default function LandingPage() {
                 <path d="M12 2L2 7v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" fill="currentColor"/>
               </svg>
             </div>
-            <h3 className="feature-title">Encrypted Storage</h3>
+            <h3 className="feature-title">Encrypted storage</h3>
             <p className="feature-desc">Your files are encrypted with military-grade security. Only you have access.</p>
           </div>
 
@@ -132,22 +165,22 @@ export default function LandingPage() {
                 <path d="M12 2v8m0 4v0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </div>
-            <h3 className="feature-title">Fast Uploads</h3>
+            <h3 className="feature-title">Fast uploads</h3>
             <p className="feature-desc">Upload files at blazing speeds with intelligent compression and optimization.</p>
           </div>
 
-          {/* Feature 4 */}
+          {/* Feature 3 */}
           <div className="feature-card feature-card-4">
             <div className="feature-icon">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
               </svg>
             </div>
-            <h3 className="feature-title">Easy Sharing</h3>
+            <h3 className="feature-title">Easy sharing</h3>
             <p className="feature-desc">Share files with custom permissions. Control who can view, download, or edit.</p>
           </div>
 
-          {/* Feature 5 */}
+          {/* Feature 4 */}
           <div className="feature-card feature-card-5">
             <div className="feature-icon">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -169,7 +202,7 @@ export default function LandingPage() {
               <path d="M12 2L2 7v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" fill="currentColor"/>
             </svg>
           </div>
-          <h3 className="info-card-title">Security First</h3>
+          <h3 className="info-card-title">Security first</h3>
           <p className="info-card-desc">We use industry-leading encryption and security protocols to protect your data. Your files are encrypted at rest and in transit, ensuring only you can access them.</p>
         </div>
 
@@ -180,7 +213,7 @@ export default function LandingPage() {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-13c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z" fill="currentColor"/>
             </svg>
           </div>
-          <h3 className="info-card-title">Your Privacy Matters</h3>
+          <h3 className="info-card-title">Your privacy matters</h3>
           <p className="info-card-desc">We never share, sell, or access your personal data. Your privacy is our priority. All data is stored securely and only accessible by you.</p>
         </div>
 
@@ -191,8 +224,8 @@ export default function LandingPage() {
               <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.3-1.54c-.3-.35-.96-.35-1.27 0-.3.36-.3.95.04 1.3l1.97 2.36c.37.44.95.44 1.32 0L17.27 9c.31-.35.31-.94-.04-1.3-.36-.36-.96-.36-1.27 0L13.96 12.29z" fill="currentColor"/>
             </svg>
           </div>
-          <h3 className="info-card-title">Terms of Service</h3>
-          <p className="info-card-desc">By using cloud-file-sharing, you agree to our terms and conditions. For more details, please contact our support team at support@cloudfilesharing.com</p>
+          <h3 className="info-card-title">Terms of service</h3>
+          <p className="info-card-desc">By using Cloud File Sharing, you agree to our terms and conditions. </p>
         </div>
       </section>
 
@@ -201,11 +234,11 @@ export default function LandingPage() {
         <div className="cta-content">
           <h2 className="cta-title">Ready to get started?</h2>
           <p className="cta-subtitle">Join thousands of users sharing files securely every day.</p>
-          <button 
+          <button
             className="btn btn-primary btn-large"
             onClick={() => navigate('/signup')}
           >
-            <span>Create Free Account</span>
+            <span>Create free account</span>
             <svg className="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -217,7 +250,7 @@ export default function LandingPage() {
       <footer className="footer">
         <div className="footer-content">
           <div className="footer-section">
-            <h4 className="footer-title">cloud-file-sharing</h4>
+            <h4 className="footer-title">Cloud File Sharing</h4>
             <p className="footer-desc">Secure file sharing for everyone.</p>
           </div>
           <div className="footer-section">
@@ -227,7 +260,7 @@ export default function LandingPage() {
               <li><a href="#security">Security</a></li>
             </ul>
           </div>
-          
+
           <div className="footer-section">
             <h4 className="footer-link-title">Legal</h4>
             <ul className="footer-links">
@@ -236,6 +269,7 @@ export default function LandingPage() {
             </ul>
           </div>
         </div>
+        
       </footer>
     </div>
   );

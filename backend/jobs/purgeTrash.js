@@ -1,14 +1,29 @@
 /*
-  Trash auto-purge job — permanently deletes anything that's been
-  in Trash for more than 15 days (DB row + S3 object).
-  Runs once a day at 3:00 AM server time.
+  Trash auto-purge job — permanently deletes anything in Trash for more
+  than 15 days (DB row + S3 object), and logs each purge for the admin dashboard.
+
+  Replaces your existing backend/jobs/purgeTrash.js from earlier.
 */
+
 const cron = require('node-cron');
-const { supabase } = require('../config/supabase');
-const { s3, S3_BUCKET } = require('../services/s3Service');
+const { supabase } = require('../config/supabase'); // adjust path
+const { s3, S3_BUCKET } = require('../config/s3');   // adjust path
 const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 const TRASH_DAYS = 15;
+
+async function logPurge(itemType, itemName, userId, deletedAt) {
+  try {
+    await supabase.from('trash_purge_log').insert([{
+      item_type: itemType,
+      item_name: itemName,
+      user_id: userId,
+      deleted_at: deletedAt,
+    }]);
+  } catch (err) {
+    console.error('Failed to write purge log entry:', err);
+  }
+}
 
 async function purgeExpiredTrash() {
   const cutoff = new Date(Date.now() - TRASH_DAYS * 24 * 60 * 60 * 1000).toISOString();
@@ -31,6 +46,7 @@ async function purgeExpiredTrash() {
           console.error(`Failed to delete S3 object for file ${file.id}:`, s3Err);
         }
       }
+      await logPurge('file', file.filename, file.user_id, file.deleted_at);
     }
 
     if (expiredFiles && expiredFiles.length > 0) {
@@ -62,8 +78,8 @@ async function purgeExpiredTrash() {
           }
         }
       }
-
       await supabase.from('files').delete().eq('folder_id', folder.id);
+      await logPurge('folder', folder.name, folder.user_id, folder.deleted_at);
     }
 
     if (expiredFolders && expiredFolders.length > 0) {

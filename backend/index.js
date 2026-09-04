@@ -12,7 +12,7 @@ const fileUpload = require('express-fileupload');
 // This file contains: PORT, SUPABASE_URL, SUPABASE_KEY, AWS credentials, etc.
 dotenv.config();
 // Start the daily trash auto-purge job (deletes items in Trash older than 15 days)
-require('./jobs/purgeTrash');
+//require('./jobs/purgeTrash');
 
 // Create Express application
 const app = express();
@@ -46,6 +46,8 @@ app.use('/api/files', require('./routes/file'));
 
 // Folder routes
 app.use('/api/folders', require('./routes/folders'));
+
+app.use('/api/admin', require('./routes/admin'));
 
 // Feedback routes
 app.use('/api/feedback', require('./routes/feedback'));

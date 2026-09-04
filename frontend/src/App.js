@@ -8,18 +8,34 @@ import Signup from './components/Signup';
 import Dashboard from './components/Dashboard';
 import ResetPassword from './components/ResetPassword';
 import SharedFileView from './components/SharedFileView';
+import AdminDashboard from './components/Admin/AdminDashboard';
 import "./theme-variables.css";
+import { checkIsAdmin } from './api';
 
 
 function AppContent() {
   const location = useLocation();
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminChecked, setAdminChecked] = useState(false);
 
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
     } else {
       localStorage.removeItem('token');
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      checkIsAdmin(token).then((res) => {
+        setIsAdmin(res.success && res.isAdmin);
+        setAdminChecked(true);
+      });
+    } else {
+      setIsAdmin(false);
+      setAdminChecked(true);
     }
   }, [token]);
 
@@ -47,7 +63,7 @@ function AppContent() {
   };
 
   // Hide navbar on Dashboard only
-const showNavbar = location.pathname === '/';
+  const showNavbar = location.pathname === '/';
   return (
     <>
       {showNavbar && <Navbar />}
@@ -58,6 +74,18 @@ const showNavbar = location.pathname === '/';
         <Route path="/reset-password" element={token ? <Navigate to="/dashboard" /> : <ResetPassword />} />
         <Route path="/shared/:fileId" element={<SharedFileView />} />
         <Route path="/dashboard" element={token ? <Dashboard token={token} onLogout={handleLogout} /> : <Navigate to="/" />} />
+        <Route
+          path="/admin"
+          element={
+            !adminChecked ? (
+              <div style={{ padding: 40, textAlign: 'center' }}>Checking access...</div>
+            ) : token && isAdmin ? (
+              <AdminDashboard token={token} />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </>

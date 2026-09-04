@@ -11,18 +11,19 @@ const transporter = nodemailer.createTransport({
 exports.sendPasswordResetEmail = async (email, resetCode) => {
   try {
     const info = await transporter.sendMail({
-      from: `"YourApp Support" <${process.env.EMAIL_USER}>`,
+      from: `"Cloud File Sharing" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Your Password Reset Code',
-      text: `Your password reset code is: ${resetCode}\n\nThis code expires in 1 hour.`,
+      subject: 'Reset Your Password',
+      text: `Your password reset code is: ${resetCode}\n\nThis code will expire in 1 hour. If you didn't request this, please ignore this email.`,
       html: `
         <div style="font-family: sans-serif; padding: 20px;">
-          <h2>Password Reset Code</h2>
-          <p>Your reset code is:</p>
-          <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">${resetCode}</p>
-          <p>This code expires in 1 hour.</p>
-          <p>THANK YOU.</p>
-          <p>Cloud-File-Sharing</p>
+          <h2>Password Reset Request</h2>
+          <p>We received a request to reset your password. Use the code below to proceed:</p>
+          <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #007bff;">${resetCode}</p>
+          <p style="color: #666;">This code expires in <strong>1 hour</strong>.</p>
+          <p style="color: #999; font-size: 12px;">Didn't request this? Your account is still secure. Ignore this email and your password will remain unchanged.</p>
+          <hr style="border: none; border-top: 1px solid #ddd; margin-top: 30px;">
+          <p style="color: #666; font-size: 12px;">Cloud File Sharing Team</p>
         </div>
       `,
     });
@@ -38,77 +39,94 @@ exports.sendPasswordResetEmail = async (email, resetCode) => {
 exports.sendLoginNotificationEmail = async (userEmail, userName, loginDetails) => {
   try {
     const mailOptions = {
-      from: `"YourApp Support" <${process.env.EMAIL_USER}>`,
+      from: `"Cloud File Sharing" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: '🔔 New Login to Your Account',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>New Login Detected</h2>
           <p>Hi ${userName || 'there'},</p>
-          <p>Your account was just accessed:</p>
-          <ul>
-            <li><strong>Time:</strong> ${loginDetails.timestamp}</li>
-            <li><strong>IP Address:</strong> ${loginDetails.ipAddress}</li>
-            <li><strong>Device:</strong> ${loginDetails.userAgent}</li>
-          </ul>
-          <p>If this wasn't you, please reset your password immediately.</p>
-          <p>THANK YOU.</p>
-          <p>Cloud-File-Sharing</p>
+          <p>Your account was just accessed. Here are the details:</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+            <tr style="background-color: #f5f5f5;">
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>Time:</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${loginDetails.timestamp}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>IP Address:</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${loginDetails.ipAddress}</td>
+            </tr>
+            <tr style="background-color: #f5f5f5;">
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>Device:</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${loginDetails.userAgent}</td>
+            </tr>
+          </table>
+          <p><strong>Don't recognize this activity?</strong></p>
+          <p>If this login wasn't you, we recommend changing your password immediately to keep your account secure.</p>
+          <p style="color: #666; font-size: 12px; margin-top: 30px;">Cloud File Sharing Team</p>
         </div>
       `
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Login notification email sent:', info.messageId);
+    console.log('✅ Login notification email sent:', info.messageId);
   } catch (err) {
-    console.error('Failed to send login notification email:', err.message);
+    console.error('❌ Failed to send login notification email:', err.message);
   }
 };
 
 exports.sendVerificationEmail = async (email, code) => {
   try {
     const info = await transporter.sendMail({
-      from: `"YourApp Support" <${process.env.EMAIL_USER}>`,
+      from: `"Cloud File Sharing" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Your Verification Code',
-      text: `Your verification code is: ${code}\nThis code expires in 10 minutes.`,
+      subject: 'Verify Your Email Address',
+      text: `Your verification code is: ${code}\nThis code expires in 5 minutes.`,
       html: `
         <div style="font-family: sans-serif; padding: 20px;">
-          <h2>Email Verification</h2>
-          <p>Your verification code is:</p>
-          <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">${code}</p>
-          <p>This code expires in 10 minutes.</p>
-          <p>THANK YOU.</p>
-          <p>Cloud-File-Sharing</p>
+          <h2>Verify Your Email</h2>
+          <p>Welcome! To get started, please verify your email address using the code below:</p>
+          <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #007bff;">${code}</p>
+          <p style="color: #666;">This code expires in <strong>5 minutes</strong>.</p>
+          <p style="color: #999; font-size: 12px;">If you didn't create this account, please disregard this email.</p>
+          <hr style="border: none; border-top: 1px solid #ddd; margin-top: 30px;">
+          <p style="color: #666; font-size: 12px;">Cloud File Sharing Team</p>
         </div>
       `,
     });
-    console.log('Verification email sent:', info.messageId);
+    console.log('✅ Verification email sent:', info.messageId);
   } catch (err) {
-    console.error('Failed to send verification email:', err.message);
+    console.error('❌ Failed to send verification email:', err.message);
   }
 };
 
 exports.sendAccountLockedEmail = async (email, minutes = 20) => {
   try {
     const info = await transporter.sendMail({
-      from: `"YourApp Support" <${process.env.EMAIL_USER}>`,
+      from: `"Cloud File Sharing" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Your account has been temporarily locked',
-      text: `Your account was locked for ${minutes} minutes due to multiple failed login attempts.`,
+      subject: 'Account Security Alert',
+      text: `Your account has been temporarily locked for ${minutes} minutes due to multiple failed login attempts.`,
       html: `
         <div style="font-family: sans-serif; padding: 20px;">
-          <h2>Account Locked</h2>
-          <p>We noticed multiple failed login attempts on your account.</p>
-          <p>Your account has been locked for <strong>${minutes} minutes</strong> as a security measure.</p>
-          <p>If this wasn't you, please change your password once the lock period ends.</p>
-          <p>THANK YOU.</p>
-          <p>Cloud-File-Sharing</p>
+          <h2>Account Temporarily Locked</h2>
+          <p>We detected multiple unsuccessful login attempts on your account. To protect your security, your account has been temporarily locked.</p>
+          <p><strong>Lock Duration:</strong> ${minutes} minutes</p>
+          <p><strong>What happens next?</strong></p>
+          <ul>
+            <li>Your account will automatically unlock after ${minutes} minutes</li>
+            <li>Try logging in again after the lock period expires</li>
+            <li>If you're having trouble remembering your password, you can reset it using the "Forgot Password" option</li>
+          </ul>
+          <p style="color: #d9534f;"><strong>Is this suspicious?</strong></p>
+          <p style="color: #666;">If you didn't attempt these logins, we recommend resetting your password once your account is unlocked. This will help keep your data safe.</p>
+          <hr style="border: none; border-top: 1px solid #ddd; margin-top: 30px;">
+          <p style="color: #666; font-size: 12px;">Cloud File Sharing Team</p>
         </div>
       `,
     });
-    console.log('Lockout email sent:', info.messageId);
+    console.log('✅ Account lock notification sent:', info.messageId);
   } catch (err) {
-    console.error('Failed to send lockout email:', err.message);
+    console.error('❌ Failed to send account lock email:', err.message);
   }
 };
