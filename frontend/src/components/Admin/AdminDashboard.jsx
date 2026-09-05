@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './AdminDashboard.css';
 import {
   getAdminOverview,
@@ -8,6 +8,8 @@ import {
   getAdminPurgeLog,
   getAdminSettings,
   updateAdminSettings,
+  editProfile,
+  changePassword,
 } from '../../api';
 
 const IconOverview = (props) => (
@@ -38,6 +40,31 @@ const IconStar = (props) => (
     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z" />
   </svg>
 );
+const IconUser = (props) => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+const IconKey = (props) => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="7.5" cy="15.5" r="5.5" />
+    <path d="m21 2-9.6 9.6" />
+    <path d="m15.5 7.5 3 3L22 7l-3-3" />
+  </svg>
+);
+const IconMessage = (props) => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
+  </svg>
+);
+const IconLogOut = (props) => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="M16 17l5-5-5-5" />
+    <path d="M21 12H9" />
+  </svg>
+);
 
 const formatBytes = (bytes) => {
   if (!bytes || bytes === 0) return '0 Bytes';
@@ -52,14 +79,102 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-export default function AdminDashboard({ token }) {
+export default function AdminDashboard({ token, onLogout }) {
   const [section, setSection] = useState('overview');
+  const [settingsSubTab, setSettingsSubTab] = useState('platform');
+  const [userName, setUserName] = useState('Admin');
+  const [userEmail, setUserEmail] = useState('admin@example.com');
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const name = localStorage.getItem('userName') || 'Admin';
+    const email = localStorage.getItem('userEmail') || 'admin@example.com';
+    setUserName(name);
+    setUserEmail(email);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowUserDropdown(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const handleLogoutClick = () => {
+    setShowUserDropdown(false);
+    if (onLogout) {
+      onLogout();
+    } else {
+      localStorage.removeItem('token');
+      window.location.href = '/';
+    }
+  };
+
+  const goToProfile = () => {
+    setShowUserDropdown(false);
+    setSection('settings');
+    setSettingsSubTab('profile');
+  };
+
+  const goToSecurity = () => {
+    setShowUserDropdown(false);
+    setSection('settings');
+    setSettingsSubTab('security');
+  };
+
+  const goToFeedback = () => {
+    setShowUserDropdown(false);
+    setSection('feedback');
+  };
 
   return (
     <div className="admin-container">
       <header className="admin-header">
         <h1 className="admin-brand">Admin</h1>
+
+        <div className="admin-user-menu-wrapper" ref={dropdownRef}>
+          <button
+            className="admin-user-profile-btn"
+            onClick={() => setShowUserDropdown(!showUserDropdown)}
+          >
+            <div className="admin-user-avatar-small">{userName.charAt(0).toUpperCase()}</div>
+            <span className="admin-user-name-short">{userName}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          {showUserDropdown && (
+            <div className="admin-user-dropdown">
+              <div className="admin-dropdown-header">
+                <div className="admin-dropdown-avatar">{userName.charAt(0).toUpperCase()}</div>
+                <div className="admin-dropdown-user-info">
+                  <p className="admin-dropdown-name">{userName}</p>
+                  <p className="admin-dropdown-email">{userEmail}</p>
+                </div>
+              </div>
+              <div className="admin-dropdown-divider"></div>
+              <button onClick={goToProfile} className="admin-dropdown-item">
+                <IconUser /> Edit profile
+              </button>
+              <button onClick={goToSecurity} className="admin-dropdown-item">
+                <IconKey /> Change password
+              </button>
+              <button onClick={goToFeedback} className="admin-dropdown-item">
+                <IconMessage /> Feedback
+              </button>
+              <button className="admin-dropdown-item logout" onClick={handleLogoutClick}>
+                <IconLogOut /> Logout
+              </button>
+            </div>
+          )}
+        </div>
       </header>
+
       <div className="admin-body">
         <aside className="admin-sidebar">
           <nav className="admin-nav">
@@ -72,7 +187,7 @@ export default function AdminDashboard({ token }) {
             <button className={`admin-nav-item ${section === 'trash' ? 'active' : ''}`} onClick={() => setSection('trash')}>
               <IconTrashA /> Trash
             </button>
-            <button className={`admin-nav-item ${section === 'settings' ? 'active' : ''}`} onClick={() => setSection('settings')}>
+            <button className={`admin-nav-item ${section === 'settings' ? 'active' : ''}`} onClick={() => { setSection('settings'); setSettingsSubTab('platform'); }}>
               <IconSettingsA /> Settings
             </button>
           </nav>
@@ -81,7 +196,16 @@ export default function AdminDashboard({ token }) {
           {section === 'overview' && <OverviewSection token={token} />}
           {section === 'feedback' && <FeedbackSection token={token} />}
           {section === 'trash' && <TrashSection token={token} />}
-          {section === 'settings' && <SettingsSection token={token} />}
+          {section === 'settings' && (
+            <SettingsSection
+              token={token}
+              subTab={settingsSubTab}
+              setSubTab={setSettingsSubTab}
+              userName={userName}
+              userEmail={userEmail}
+              setUserName={setUserName}
+            />
+          )}
         </main>
       </div>
     </div>
@@ -317,9 +441,84 @@ function TrashSection({ token }) {
 }
 
 // ============================================
-// PLATFORM SETTINGS
+// SETTINGS (Profile / Security / Platform)
 // ============================================
-function SettingsSection({ token }) {
+function SettingsSection({ token, subTab, setSubTab, userName, userEmail, setUserName }) {
+  // ---- Profile form state ----
+  const [profileFullName, setProfileFullName] = useState(userName);
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileBio, setProfileBio] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+  const [profileError, setProfileError] = useState('');
+
+  useEffect(() => {
+    setProfileFullName(userName);
+  }, [userName]);
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileError('');
+    setProfileMessage('');
+    try {
+      const response = await editProfile(token, {
+        fullName: profileFullName,
+        phone: profilePhone,
+        bio: profileBio,
+      });
+      if (response.success) {
+        setProfileMessage('Profile updated successfully!');
+        const newName = response.user?.fullName || profileFullName;
+        setUserName(newName);
+        localStorage.setItem('userName', newName);
+      } else {
+        setProfileError(response.message || 'Failed to update profile');
+      }
+    } catch (error) {
+      setProfileError('Failed to update profile');
+    }
+    setProfileSaving(false);
+  };
+
+  // ---- Security form state ----
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordMessage('');
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      setPasswordError('Please fill in all password fields.');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      const res = await changePassword(token, { currentPassword, newPassword });
+      if (res.success) {
+        setPasswordMessage('Password updated successfully!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+      } else {
+        setPasswordError(res.message || 'Failed to update password.');
+      }
+    } catch (error) {
+      setPasswordError('Failed to update password.');
+    }
+    setPasswordSaving(false);
+  };
+
+  // ---- Platform settings state ----
   const [settings, setSettings] = useState(null);
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
@@ -328,7 +527,7 @@ function SettingsSection({ token }) {
     getAdminSettings(token).then((res) => { if (res.success) setSettings(res.settings); });
   }, [token]);
 
-  const save = async () => {
+  const savePlatformSettings = async () => {
     setSaving(true);
     const res = await updateAdminSettings(token, {
       defaultStorageLimit: settings.default_storage_limit,
@@ -343,48 +542,193 @@ function SettingsSection({ token }) {
     setSaving(false);
   };
 
-  if (!settings) return <div className="admin-loading">Loading…</div>;
+  // ---- Storage summary (for the mini card) ----
+  const [overview, setOverview] = useState(null);
+
+  useEffect(() => {
+    getAdminOverview(token).then((res) => {
+      if (res.success) setOverview(res);
+    });
+  }, [token]);
+
+  const breakdownTotal = overview
+    ? Object.values(overview.breakdown).reduce((a, b) => a + b, 0) || 1
+    : 1;
 
   return (
     <div className="admin-section">
-      <h2 className="admin-section-title">Platform settings</h2>
+      <h2 className="admin-section-title">Settings</h2>
 
-      <div className="admin-panel">
-        <div className="admin-field">
-          <label className="admin-field-label">Default storage limit for new users (GB)</label>
-          <input
-            className="admin-field-input"
-            type="number"
-            value={(settings.default_storage_limit / (1024 * 1024 * 1024)).toFixed(1)}
-            onChange={(e) => setSettings({ ...settings, default_storage_limit: Math.round(Number(e.target.value) * 1024 * 1024 * 1024) })}
-          />
+      <div className="admin-settings-grid">
+        <div className="admin-settings-main">
+          <div className="admin-subtabs">
+            <button className={`admin-subtab-btn ${subTab === 'profile' ? 'active' : ''}`} onClick={() => setSubTab('profile')}>
+              Profile
+            </button>
+            <button className={`admin-subtab-btn ${subTab === 'security' ? 'active' : ''}`} onClick={() => setSubTab('security')}>
+              Security
+            </button>
+            <button className={`admin-subtab-btn ${subTab === 'platform' ? 'active' : ''}`} onClick={() => setSubTab('platform')}>
+              Platform
+            </button>
+          </div>
+
+          {subTab === 'profile' && (
+            <div className="admin-panel">
+              <h3 className="admin-panel-title">Personal information</h3>
+              {profileError && <div className="admin-alert error">{profileError}</div>}
+              {profileMessage && <div className="admin-alert success">{profileMessage}</div>}
+              <form onSubmit={handleSaveProfile}>
+                <div className="admin-field">
+                  <label className="admin-field-label">Full name</label>
+                  <input
+                    className="admin-field-input"
+                    type="text"
+                    value={profileFullName}
+                    onChange={(e) => setProfileFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="admin-field">
+                  <label className="admin-field-label">Email</label>
+                  <input className="admin-field-input" type="email" value={userEmail} disabled />
+                </div>
+                <div className="admin-field">
+                  <label className="admin-field-label">Phone (Optional)</label>
+                  <input
+                    className="admin-field-input"
+                    type="tel"
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+                <div className="admin-field">
+                  <label className="admin-field-label">Bio</label>
+                  <textarea
+                    className="admin-field-input"
+                    rows="3"
+                    value={profileBio}
+                    onChange={(e) => setProfileBio(e.target.value)}
+                    placeholder="Tell us about yourself"
+                  />
+                </div>
+                <button type="submit" className="admin-save-btn" disabled={profileSaving}>
+                  {profileSaving ? 'Saving...' : 'Save changes'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {subTab === 'security' && (
+            <div className="admin-panel">
+              <h3 className="admin-panel-title">Password &amp; access</h3>
+              {passwordError && <div className="admin-alert error">{passwordError}</div>}
+              {passwordMessage && <div className="admin-alert success">{passwordMessage}</div>}
+              <form onSubmit={handleChangePassword}>
+                <div className="admin-field">
+                  <label className="admin-field-label">Current password</label>
+                  <input
+                    className="admin-field-input"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                  />
+                </div>
+                <div className="admin-field">
+                  <label className="admin-field-label">New password</label>
+                  <input
+                    className="admin-field-input"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                  />
+                </div>
+                <div className="admin-field">
+                  <label className="admin-field-label">Confirm new password</label>
+                  <input
+                    className="admin-field-input"
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <button type="submit" className="admin-save-btn" disabled={passwordSaving}>
+                  {passwordSaving ? 'Updating...' : 'Update password'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {subTab === 'platform' && (
+            settings ? (
+              <div className="admin-panel">
+                <div className="admin-field">
+                  <label className="admin-field-label">Default storage limit for new users (GB)</label>
+                  <input
+                    className="admin-field-input"
+                    type="number"
+                    value={(settings.default_storage_limit / (1024 * 1024 * 1024)).toFixed(1)}
+                    onChange={(e) => setSettings({ ...settings, default_storage_limit: Math.round(Number(e.target.value) * 1024 * 1024 * 1024) })}
+                  />
+                </div>
+
+                <div className="admin-toggle-row">
+                  <span>Allow new signups</span>
+                  <button
+                    className={`admin-switch ${settings.allow_signups ? 'on' : ''}`}
+                    onClick={() => setSettings({ ...settings, allow_signups: !settings.allow_signups })}
+                  >
+                    <span className="admin-switch-knob"></span>
+                  </button>
+                </div>
+
+                <div className="admin-toggle-row">
+                  <span>Maintenance mode</span>
+                  <button
+                    className={`admin-switch ${settings.maintenance_mode ? 'on' : ''}`}
+                    onClick={() => setSettings({ ...settings, maintenance_mode: !settings.maintenance_mode })}
+                  >
+                    <span className="admin-switch-knob"></span>
+                  </button>
+                </div>
+
+                {savedMessage && <div className="admin-alert success">{savedMessage}</div>}
+
+                <button className="admin-save-btn" onClick={savePlatformSettings} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save settings'}
+                </button>
+              </div>
+            ) : (
+              <div className="admin-loading">Loading…</div>
+            )
+          )}
         </div>
 
-        <div className="admin-toggle-row">
-          <span>Allow new signups</span>
-          <button
-            className={`admin-switch ${settings.allow_signups ? 'on' : ''}`}
-            onClick={() => setSettings({ ...settings, allow_signups: !settings.allow_signups })}
-          >
-            <span className="admin-switch-knob"></span>
-          </button>
-        </div>
-
-        <div className="admin-toggle-row">
-          <span>Maintenance mode</span>
-          <button
-            className={`admin-switch ${settings.maintenance_mode ? 'on' : ''}`}
-            onClick={() => setSettings({ ...settings, maintenance_mode: !settings.maintenance_mode })}
-          >
-            <span className="admin-switch-knob"></span>
-          </button>
-        </div>
-
-        {savedMessage && <div className="admin-alert success">{savedMessage}</div>}
-
-        <button className="admin-save-btn" onClick={save} disabled={saving}>
-          {saving ? 'Saving...' : 'Save settings'}
-        </button>
+        {/* ---- Storage mini card (fills the empty right column) ---- */}
+        <aside className="admin-storage-mini-card">
+          <h3 className="admin-panel-title">Storage overview</h3>
+          {!overview ? (
+            <div className="admin-loading">Loading…</div>
+          ) : (
+            <>
+              <p className="admin-storage-mini-total">{formatBytes(overview.totalStorageUsed)}</p>
+              <p className="admin-storage-mini-sub">across all users</p>
+              {Object.entries(overview.breakdown).map(([type, bytes]) => (
+                <div key={type} className="admin-breakdown-row mini">
+                  <span className="admin-breakdown-label">{type}</span>
+                  <div className="admin-breakdown-bar">
+                    <div className="admin-breakdown-fill" style={{ width: `${(bytes / breakdownTotal) * 100}%` }}></div>
+                  </div>
+                  <span className="admin-breakdown-value">{formatBytes(bytes)}</span>
+                </div>
+              ))}
+            </>
+          )}
+        </aside>
       </div>
     </div>
   );

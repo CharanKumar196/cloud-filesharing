@@ -64,23 +64,49 @@ function AppContent() {
 
   // Hide navbar on Dashboard only
   const showNavbar = location.pathname === '/';
+
+  const AuthRedirect = () => {
+    if (!token) return <LandingPage />;
+    if (!adminChecked) return <div style={{ padding: 40, textAlign: 'center' }}>Checking access...</div>;
+    return isAdmin ? <Navigate to="/admin" /> : <Navigate to="/dashboard" />;
+  };
+
+  const LoginRedirect = () => {
+    if (!token) return <Login />;
+    if (!adminChecked) return <div style={{ padding: 40, textAlign: 'center' }}>Checking access...</div>;
+    return isAdmin ? <Navigate to="/admin" /> : <Navigate to="/dashboard" />;
+  };
+
   return (
     <>
       {showNavbar && <Navbar />}
       <Routes>
-        <Route path="/" element={token ? <Navigate to="/dashboard" /> : <LandingPage />} />
-        <Route path="/login" element={token ? <Navigate to="/dashboard" /> : <Login />} />
+        <Route path="/" element={<AuthRedirect />} />
+        <Route path="/login" element={<LoginRedirect />} />
         <Route path="/signup" element={token ? <Navigate to="/dashboard" /> : <Signup />} />
         <Route path="/reset-password" element={token ? <Navigate to="/dashboard" /> : <ResetPassword />} />
         <Route path="/shared/:fileId" element={<SharedFileView />} />
-        <Route path="/dashboard" element={token ? <Dashboard token={token} onLogout={handleLogout} /> : <Navigate to="/" />} />
+        <Route
+          path="/dashboard"
+          element={
+            !token ? (
+              <Navigate to="/" />
+            ) : !adminChecked ? (
+              <div style={{ padding: 40, textAlign: 'center' }}>Checking access...</div>
+            ) : isAdmin ? (
+              <Navigate to="/admin" />
+            ) : (
+              <Dashboard token={token} onLogout={handleLogout} isAdmin={isAdmin} />
+            )
+          }
+        />
         <Route
           path="/admin"
           element={
             !adminChecked ? (
               <div style={{ padding: 40, textAlign: 'center' }}>Checking access...</div>
             ) : token && isAdmin ? (
-              <AdminDashboard token={token} />
+              <AdminDashboard token={token} onLogout={handleLogout} />
             ) : (
               <Navigate to="/" />
             )

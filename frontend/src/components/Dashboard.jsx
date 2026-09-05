@@ -9,6 +9,7 @@ import PreviewModal from './PreviewModal';
 import UploadModal from './UploadModal';
 import { useTheme } from '../context/ThemeContext';
 import CloudLogo from '../components/CloudLogo';
+import { useNavigate } from 'react-router-dom';
 
 // ---- Simple line-style icons (replace emoji for a cleaner look) ----
 const IconFiles = (props) => (
@@ -200,7 +201,8 @@ const IconFolderPlus = (props) => (
   </svg>
 );
 
-export default function Dashboard({ token, onLogout }) {
+export default function Dashboard({ token, onLogout, isAdmin }) {
+  console.log('isAdmin value in Dashboard:', isAdmin);
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
   const [storageInfo, setStorageInfo] = useState({ storageUsed: 0, storageLimit: 5 * 1024 * 1024 * 1024 });
@@ -268,6 +270,7 @@ export default function Dashboard({ token, onLogout }) {
   const [feedbackHoverRating, setFeedbackHoverRating] = useState(0);
   const [feedbackSentMessage, setFeedbackSentMessage] = useState('');
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadDashboardData();
@@ -1409,6 +1412,11 @@ export default function Dashboard({ token, onLogout }) {
               <button onClick={() => goToSettingsTab('feedback')} className="dropdown-item">
                 <IconMessage /> Feedback
               </button>
+              {isAdmin && (
+              <button onClick={() => { setShowUserDropdown(false); navigate('/admin'); }} className="dropdown-item">
+                <IconSettings /> Admin Panel
+              </button>
+              )}
               <button className="dropdown-item logout" onClick={() => {
                 setShowUserDropdown(false);
                 onLogout();

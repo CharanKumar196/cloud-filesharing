@@ -252,7 +252,7 @@
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #1e293b;
+  color: var(--foreground, #1e293b);
   font-weight: 500;
   font-size: 0.95rem;
   cursor: pointer;
@@ -1272,7 +1272,22 @@
     flex-wrap: wrap;
   }
 }
+@media (max-width: 600px) {
+  .content-grid-wrapper {
+    display: flex;
+    flex-direction: column;
+  }
 
+  .files-grid-area {
+    order: 1;
+  }
+
+  .storage-card {
+    order: 2;
+    width: 100%;
+    position: static;
+  }
+}
 /* ============================================
    PIN MODAL
    ============================================ */
