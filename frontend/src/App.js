@@ -11,6 +11,9 @@ import SharedFileView from './components/SharedFileView';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import "./theme-variables.css";
 import { checkIsAdmin } from './api';
+import PoliciesPage from './pages/policies';   // new import
+
+
 
 
 function AppContent() {
@@ -86,6 +89,8 @@ function AppContent() {
         <Route path="/signup" element={token ? <Navigate to="/dashboard" /> : <Signup />} />
         <Route path="/reset-password" element={token ? <Navigate to="/dashboard" /> : <ResetPassword />} />
         <Route path="/shared/:fileId" element={<SharedFileView />} />
+        // the policies route:
+        <Route path="/terms" element={<PoliciesPage />} />
         <Route
           path="/dashboard"
           element={

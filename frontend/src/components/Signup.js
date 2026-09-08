@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import TermsModal from './TermsModal';
 import './Auth.css';
 
 export default function Signup() {
@@ -20,6 +21,7 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
 
   useEffect(() => {
@@ -367,6 +369,8 @@ const handleStep3 = async (e) => {
                   onChange={(e) => setFullName(e.target.value)}
                   required
                   className="form-input"
+                  autoComplete="off"
+                  name="new-fullname"
                 />
               </div>
 
@@ -382,6 +386,7 @@ const handleStep3 = async (e) => {
                     required
                     className="form-input"
                     style={{ width: '100%', boxSizing: 'border-box', paddingRight: '40px' }}
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -406,6 +411,7 @@ const handleStep3 = async (e) => {
                     required
                     className="form-input"
                     style={{ width: '100%', boxSizing: 'border-box', paddingRight: '40px' }}
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -425,7 +431,15 @@ const handleStep3 = async (e) => {
                   className="checkbox-input"
                   required
                 />
-                <span>I agree to the <Link to="/terms" className="terms-link">Terms & Conditions</Link></span>
+                <span>I agree to the{' '}
+                  <button
+                    type="button"
+                    className="terms-link"
+                    onClick={() => setShowTerms(true)}
+                  >
+                    Terms & Conditions
+                  </button>
+                </span>
               </label>
 
               <button type="submit" disabled={loading} className="auth-button">
@@ -449,6 +463,8 @@ const handleStep3 = async (e) => {
         <div className  ="auth-glow auth-glow-1"></div>
         <div className="auth-glow auth-glow-2"></div>
       </div>
+
+      <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </div>
   );
 }

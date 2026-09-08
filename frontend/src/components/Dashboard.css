@@ -87,6 +87,14 @@
   color: var(--foreground, #313b4f);
   outline: none;
   font-size: 0.9rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-input::-webkit-search-cancel-button,
+.search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .search-input::placeholder {

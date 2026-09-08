@@ -217,7 +217,34 @@ export const createFeedback = (token, feedbackData) => {
     body: JSON.stringify(feedbackData)
   }).then(res => res.json());
 };
+// ============================================
+// NOTIFICATIONS API
+// ============================================
+const NOTIFICATIONS_BASE = 'http://localhost:5000/api/notifications';
 
+export const sendNotification = async (token, { title, message, type }) => {
+  const res = await fetch(`${NOTIFICATIONS_BASE}/send`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ title, message, type }),
+  });
+  return res.json();
+};
+
+export const getNotifications = async (token) => {
+  const res = await fetch(`${NOTIFICATIONS_BASE}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+};
+
+export const markNotificationRead = async (token, notificationId) => {
+  const res = await fetch(`${NOTIFICATIONS_BASE}/${notificationId}/read`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+};
 // ============================================
 // FILE OPERATIONS - RENAME, ARCHIVE, SHARE
 // ============================================

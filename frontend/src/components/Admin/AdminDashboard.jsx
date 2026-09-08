@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import SendNotificationForm from '../SendNotificationForm';
 import './AdminDashboard.css';
 import {
   getAdminOverview,
@@ -33,6 +34,12 @@ const IconSettingsA = (props) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <circle cx="12" cy="12" r="3" />
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+  </svg>
+);
+const IconBellA = (props) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
   </svg>
 );
 const IconStar = (props) => (
@@ -184,6 +191,9 @@ export default function AdminDashboard({ token, onLogout }) {
             <button className={`admin-nav-item ${section === 'feedback' ? 'active' : ''}`} onClick={() => setSection('feedback')}>
               <IconFeedback /> Feedback
             </button>
+            <button className={`admin-nav-item ${section === 'notifications' ? 'active' : ''}`} onClick={() => setSection('notifications')}>
+              <IconBellA /> Notifications
+            </button>
             <button className={`admin-nav-item ${section === 'trash' ? 'active' : ''}`} onClick={() => setSection('trash')}>
               <IconTrashA /> Trash
             </button>
@@ -196,6 +206,7 @@ export default function AdminDashboard({ token, onLogout }) {
           {section === 'overview' && <OverviewSection token={token} />}
           {section === 'feedback' && <FeedbackSection token={token} />}
           {section === 'trash' && <TrashSection token={token} />}
+          {section === 'notifications' && <NotificationsSection token={token} />}
           {section === 'settings' && (
             <SettingsSection
               token={token}
@@ -439,7 +450,23 @@ function TrashSection({ token }) {
     </div>
   );
 }
-
+// ============================================
+// NOTIFICATIONS (broadcast to all users)
+// ============================================
+function NotificationsSection({ token }) {
+  return (
+    <div className="admin-section">
+      <h2 className="admin-section-title">Notifications</h2>
+      <div className="admin-panel">
+        <h3 className="admin-panel-title">Send a broadcast notification</h3>
+        <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
+          This message goes to every user on the platform. There's no option to send to individuals.
+        </p>
+        <SendNotificationForm />
+      </div>
+    </div>
+  );
+}
 // ============================================
 // SETTINGS (Profile / Security / Platform)
 // ============================================

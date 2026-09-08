@@ -306,3 +306,23 @@
     text-decoration: underline;
   }
 }
+/* Back to Sign Up button */
+.policies-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #0066cc;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.policies-back-btn:hover {
+  background: #0052a3;
+}

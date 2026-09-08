@@ -48,7 +48,7 @@ app.use('/api/files', require('./routes/file'));
 app.use('/api/folders', require('./routes/folders'));
 
 app.use('/api/admin', require('./routes/admin'));
-
+app.use('/api/notifications', require('./routes/notifications'));
 // Feedback routes
 app.use('/api/feedback', require('./routes/feedback'));
 

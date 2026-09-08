@@ -10,6 +10,8 @@ import UploadModal from './UploadModal';
 import { useTheme } from '../context/ThemeContext';
 import CloudLogo from '../components/CloudLogo';
 import { useNavigate } from 'react-router-dom';
+import NotificationList from './NotificationList';
+
 
 // ---- Simple line-style icons (replace emoji for a cleaner look) ----
 const IconFiles = (props) => (
@@ -207,6 +209,7 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
   const [folders, setFolders] = useState([]);
   const [storageInfo, setStorageInfo] = useState({ storageUsed: 0, storageLimit: 5 * 1024 * 1024 * 1024 });
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchFieldReady, setSearchFieldReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -271,6 +274,10 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
   const [feedbackSentMessage, setFeedbackSentMessage] = useState('');
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notificationRef = useRef(null);
+
 
   useEffect(() => {
     loadDashboardData();
@@ -299,6 +306,15 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
     document.addEventListener('click', handleClickOutsideDropdown);
     return () => document.removeEventListener('click', handleClickOutsideDropdown);
   }, []);
+  useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (notificationRef.current && !notificationRef.current.contains(e.target)) {
+      setShowNotifications(false);
+    }
+  };
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
 
   useEffect(() => {
     const handleClickOutsideSidebar = (e) => {
@@ -1357,22 +1373,52 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
             <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
           <input
-            type="text"
+            type="search"
+            name="dashboard-file-search"
             placeholder="Search files and folders..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setSearchFieldReady(true)}
+            readOnly={!searchFieldReady}
             className="search-input"
             autoComplete="off"
+            data-lpignore="true"
+            data-1p-ignore="true"
           />
         </div>
 
-        <button
-          className="notification-bell-btn"
-          onClick={() => goToSettingsTab('notifications')}
-          title="Notifications"
-        >
-          <IconBell />
-        </button>
+  <div ref={notificationRef} style={{ position: 'relative' }}>
+  <button
+    className="notification-bell-btn"
+    onClick={() => setShowNotifications(prev => !prev)}
+    title="Notifications"
+  >
+    <IconBell />
+    {unreadCount > 0 && (
+      <span style={{
+        position: 'absolute', top: -2, right: -2,
+        background: '#e24b4a', color: 'white',
+        borderRadius: '50%', minWidth: 16, height: 16,
+        fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 3px'
+      }}>
+        {unreadCount > 9 ? '9+' : unreadCount}
+      </span>
+    )}
+  </button>
+
+  {showNotifications && (
+    <div style={{
+      position: 'absolute', top: '100%', right: 0, marginTop: 8,
+      width: 340, maxHeight: 400, overflowY: 'auto',
+      background: 'white', border: '1px solid #e5e7eb',
+      borderRadius: 12, padding: 12, zIndex: 50,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+        }}>
+          <NotificationList onUnreadCountChange={setUnreadCount} />
+        </div>
+      )}
+    </div>
         <button
             className="theme-toggle-btn"
             onClick={toggleTheme}
@@ -1923,20 +1969,38 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
 
                       <div className="settings-divider"></div>
 
-                      <div className="settings-toggle-row">
-                        <div>
-                          <p className="settings-toggle-title">🛡️ Two-factor authentication</p>
-                          <p className="settings-toggle-desc">Require a one-time code from your authenticator app at sign in.</p>
-                        </div>
-                        <button
-                          className={`settings-switch ${twoFactorEnabled ? 'on' : ''}`}
-                          onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
-                          title="Not connected to backend yet"
-                        >
-                          <span className="settings-switch-knob"></span>
-                        </button>
+                      <div style={{
+                    background: 'var(--surface-2)',
+                    border: '0.5px solid var(--border)',
+                    borderRadius: '12px',
+                    padding: '1rem 1.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <i className="ti ti-shield-check" style={{ fontSize: '20px', color: '#6b7280' }} aria-hidden="true"></i>
+                      <div>
+                        <p style={{ fontWeight: 500, fontSize: '15px', margin: 0 }}>Terms and conditions</p>
+                        <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>Review our terms of service and policies.</p>
                       </div>
                     </div>
+                    <button
+                      onClick={() => navigate('/terms')}
+                      style={{
+                        height: '32px',
+                        padding: '0 14px',
+                        fontSize: '13px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        background: 'transparent',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      View
+                    </button>
+                  </div>
+                  </div>
                   )}
 
                   {/* Notifications sub-tab */}
