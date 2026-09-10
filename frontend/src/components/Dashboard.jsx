@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
-import { getFiles, uploadFile, deleteFile, getStorageInfo, getRecentFiles, getArchivedFiles, renameFile, archiveFile, unarchiveFile, shareFile, getFolders, createFolder, renameFolder, deleteFolder, getFolderFiles, moveFileToFolder, setPrivatePin, verifyPrivatePin, checkPrivatePinExists, moveFileToPrivate, removeFileFromPrivate, getPrivateFiles, moveFolderToPrivate, removeFolderFromPrivate, getPrivateFolders, shareFolder, archiveFolder, unarchiveFolder, getArchivedFolders, moveFolderToFolder, editProfile, moveFileToTrash, moveFolderToTrash, getTrashItems, restoreFileFromTrash, restoreFolderFromTrash, permanentlyDeleteFile, permanentlyDeleteFolder, emptyTrash } from '../api';
+import { getFiles, uploadFile, deleteFile, getStorageInfo, getRecentFiles, getArchivedFiles, renameFile, archiveFile, unarchiveFile, shareFile, getFolders, createFolder, renameFolder, deleteFolder, getFolderFiles, moveFileToFolder, setPrivatePin, verifyPrivatePin, checkPrivatePinExists, moveFileToPrivate, removeFileFromPrivate, getPrivateFiles, moveFolderToPrivate, removeFolderFromPrivate, getPrivateFolders, shareFolder, archiveFolder, unarchiveFolder, getArchivedFolders, moveFolderToFolder, editProfile, moveFileToTrash, moveFolderToTrash, getTrashItems, restoreFileFromTrash, restoreFolderFromTrash, permanentlyDeleteFile, permanentlyDeleteFolder, emptyTrash, getNotifications, markNotificationRead } from '../api';
 import EditProfileModal from './EditProfileModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import { createFeedback } from '../api';
@@ -261,9 +261,6 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [notifShareActivity, setNotifShareActivity] = useState(true);
-  const [notifWeeklyDigest, setNotifWeeklyDigest] = useState(false);
-  const [notifSavedMessage, setNotifSavedMessage] = useState('');
   const [trashItems, setTrashItems] = useState({ files: [], folders: [] });
   const [trashLoading, setTrashLoading] = useState(false);
   const [selectedTrashIds, setSelectedTrashIds] = useState([]);
@@ -277,6 +274,9 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const notificationRef = useRef(null);
+  const [broadcastMessages, setBroadcastMessages] = useState([]);
+  const [broadcastLoading, setBroadcastLoading] = useState(false);
+  const [selectedBroadcast, setSelectedBroadcast] = useState(null);
 
 
   useEffect(() => {
@@ -296,6 +296,12 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showFileMenu]);
+  useEffect(() => {
+  if (activeTab === 'settings' && settingsSubTab === 'notifications') {
+    setSelectedBroadcast(null);
+    loadBroadcastMessages();
+  }
+}, [activeTab, settingsSubTab]);
 
   useEffect(() => {
     const handleClickOutsideDropdown = (e) => {
@@ -954,7 +960,25 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
     setPreviewIndex(newIndex);
     setPreviewFile(previewFileList[newIndex]);
   };
+    const loadBroadcastMessages = async () => {
+      setBroadcastLoading(true);
+      try {
+        const res = await getNotifications(token);
+        if (res.success) setBroadcastMessages(res.notifications);
+      } catch (err) {
+        console.error('Failed to load notifications:', err);
+      }
+      setBroadcastLoading(false);
+    };
 
+    const openBroadcastMessage = async (msg) => {
+      if (!msg.isRead) {
+        await markNotificationRead(token, msg.id);
+        setBroadcastMessages(prev => prev.map(m => m.id === msg.id ? { ...m, isRead: true } : m));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+      setSelectedBroadcast(msg);
+    };
   // ---- Trash page handlers ----
   const loadTrashData = async () => {
     setTrashLoading(true);
@@ -1415,7 +1439,13 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
       borderRadius: 12, padding: 12, zIndex: 50,
       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
         }}>
-          <NotificationList onUnreadCountChange={setUnreadCount} />
+          <NotificationList
+              onUnreadCountChange={setUnreadCount}
+              onItemClick={() => {
+                setShowNotifications(false);
+                goToSettingsTab('notifications');
+              }}
+            />
         </div>
       )}
     </div>
@@ -1820,9 +1850,6 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
                       <p className="settings-profile-name">{userName}</p>
                       <p className="settings-profile-email">{userEmail}</p>
                     </div>
-                    <button className="settings-change-photo-btn" disabled title="Coming soon">
-                      Change photo
-                    </button>
                   </div>
 
                   {/* Sub tabs */}
@@ -2003,52 +2030,98 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
                   </div>
                   )}
 
-                  {/* Notifications sub-tab */}
                   {settingsSubTab === 'notifications' && (
                     <div className="settings-section-card">
-                      <h3 className="settings-section-title">Notifications</h3>
-                      <p className="settings-section-desc">Choose what we email you about.</p>
-
-                      <div className="settings-toggle-row">
+                      {selectedBroadcast ? (
                         <div>
-                          <p className="settings-toggle-title">Share activity</p>
-                          <p className="settings-toggle-desc">When someone opens or comments on a shared file.</p>
+                          <button
+                            onClick={() => setSelectedBroadcast(null)}
+                            style={{
+                              background: 'none', border: 'none', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: 6,
+                              fontSize: 13, color: '#2563eb', padding: 0, marginBottom: 16
+                            }}
+                          >
+                            ← Back to messages
+                          </button>
+
+                          <span style={{
+                            display: 'inline-block', fontSize: 11, fontWeight: 600,
+                            textTransform: 'uppercase', letterSpacing: 0.3,
+                            padding: '3px 8px', borderRadius: 6, marginBottom: 10,
+                            background: selectedBroadcast.type === 'billing' ? '#fef3c7'
+                              : selectedBroadcast.type === 'warning' ? '#fee2e2' : '#dbeafe',
+                            color: selectedBroadcast.type === 'billing' ? '#92400e'
+                              : selectedBroadcast.type === 'warning' ? '#991b1b' : '#1e40af'
+                          }}>
+                            {selectedBroadcast.type || 'info'}
+                          </span>
+
+                          <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
+                            {selectedBroadcast.title}
+                          </h2>
+                          <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 20px' }}>
+                            {new Date(selectedBroadcast.created_at).toLocaleString()}
+                          </p>
+                          <p style={{ fontSize: 15, lineHeight: 1.7, color: '#374151', whiteSpace: 'pre-wrap' }}>
+                            {selectedBroadcast.message}
+                          </p>
                         </div>
-                        <button
-                          className={`settings-switch ${notifShareActivity ? 'on' : ''}`}
-                          onClick={() => setNotifShareActivity(!notifShareActivity)}
-                        >
-                          <span className="settings-switch-knob"></span>
-                        </button>
-                      </div>
+                      ) : (
+                        <>
+                          <h3 className="settings-section-title">Notifications</h3>
+                          <p className="settings-section-desc">Messages from the admin team.</p>
 
-                      <div className="settings-toggle-row">
-                        <div>
-                          <p className="settings-toggle-title">Weekly digest</p>
-                          <p className="settings-toggle-desc">A summary of uploads and storage each Monday.</p>
-                        </div>
-                        <button
-                          className={`settings-switch ${notifWeeklyDigest ? 'on' : ''}`}
-                          onClick={() => setNotifWeeklyDigest(!notifWeeklyDigest)}
-                        >
-                          <span className="settings-switch-knob"></span>
-                        </button>
-                      </div>
+                          <div style={{ margin: '16px 0 24px' }}>
+                            {broadcastLoading ? (
+                              <p style={{ fontSize: 13, color: '#9ca3af' }}>Loading messages...</p>
+                            ) : broadcastMessages.length === 0 ? (
+                              <p style={{ fontSize: 13, color: '#9ca3af' }}>No messages yet.</p>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                {broadcastMessages.map(msg => (
+                                  <div
+                                    key={msg.id}
+                                    onClick={() => openBroadcastMessage(msg)}
+                                    style={{
+                                      display: 'flex', alignItems: 'flex-start', gap: 12,
+                                      padding: '12px 8px', borderRadius: 8, cursor: 'pointer',
+                                      borderBottom: '1px solid #f3f4f6'
+                                    }}
+                                  >
+                                    <div style={{
+                                      width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
+                                      background: msg.isRead ? 'transparent' : '#2563eb'
+                                    }} />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <p style={{
+                                        margin: 0, fontSize: 14,
+                                        fontWeight: msg.isRead ? 500 : 700,
+                                        color: '#111827'
+                                      }}>
+                                        {msg.title}
+                                      </p>
+                                      <p style={{
+                                        margin: '2px 0 0', fontSize: 13, color: '#6b7280',
+                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                      }}>
+                                        {msg.message}
+                                      </p>
+                                    </div>
+                                    <span style={{ fontSize: 12, color: '#9ca3af', flexShrink: 0 }}>
+                                      {new Date(msg.created_at).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
 
-                      {notifSavedMessage && <div className="settings-alert success">{notifSavedMessage}</div>}
-
-                      <button
-                        className="settings-save-btn"
-                        onClick={() => {
-                          setNotifSavedMessage('Preferences saved!');
-                          setTimeout(() => setNotifSavedMessage(''), 2000);
-                        }}
-                      >
-                        Save preferences
-                      </button>
+                          
+                        </>
+                      )}
                     </div>
                   )}
-
                   {/* Storage sub-tab */}
                   {settingsSubTab === 'storage' && (
                     <div className="settings-storage-grid">

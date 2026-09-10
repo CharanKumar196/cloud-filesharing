@@ -72,6 +72,12 @@ const IconLogOut = (props) => (
     <path d="M21 12H9" />
   </svg>
 );
+const IconBadge = ({ children, color = '#2563eb' }) => (
+  <span className="icon-badge" style={{ backgroundColor: color }}>
+    {children}
+  </span>
+);
+
 
 const formatBytes = (bytes) => {
   if (!bytes || bytes === 0) return '0 Bytes';
@@ -456,14 +462,10 @@ function TrashSection({ token }) {
 function NotificationsSection({ token }) {
   return (
     <div className="admin-section">
-      <h2 className="admin-section-title">Notifications</h2>
-      <div className="admin-panel">
-        <h3 className="admin-panel-title">Send a broadcast notification</h3>
-        <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
-          This message goes to every user on the platform. There's no option to send to individuals.
-        </p>
-        <SendNotificationForm />
-      </div>
+      <h2 className="admin-section-title admin-title-with-icon">
+        <IconBadge><IconBellA /></IconBadge> Notifications
+      </h2>
+      <SendNotificationForm />
     </div>
   );
 }

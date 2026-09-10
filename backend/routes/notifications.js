@@ -5,11 +5,15 @@ const isAdmin = require('../middleware/isAdmin');
 const {
   sendNotification,
   getNotifications,
-  markAsRead
+  markAsRead,
+  deleteNotification,
+  deleteAllNotifications
 } = require('../controllers/notificationController');
 
-router.post('/send', protect, isAdmin, sendNotification); // admin only
-router.get('/', protect, getNotifications);                // any logged-in user
-router.post('/:notificationId/read', protect, markAsRead); // any logged-in user
+router.post('/send', protect, isAdmin, sendNotification);
+router.get('/', protect, getNotifications);
+router.post('/:notificationId/read', protect, markAsRead);
+router.delete('/:notificationId', protect, isAdmin, deleteNotification);
+router.delete('/', protect, isAdmin, deleteAllNotifications);
 
 module.exports = router;

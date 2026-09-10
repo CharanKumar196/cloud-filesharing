@@ -205,6 +205,21 @@ export const changePassword = (token, passwords) => {
     body: JSON.stringify(passwords)
   }).then(res => res.json());
 };
+export const deleteNotification = async (token, notificationId) => {
+  const res = await fetch(`${NOTIFICATIONS_BASE}/${notificationId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+};
+
+export const deleteAllNotifications = async (token) => {
+  const res = await fetch(`${NOTIFICATIONS_BASE}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+};
 
 // Create Feedback
 export const createFeedback = (token, feedbackData) => {

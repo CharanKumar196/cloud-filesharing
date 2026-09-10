@@ -78,3 +78,38 @@ exports.markAsRead = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+// @desc    Admin deletes a single broadcast notification for everyone
+// @route   DELETE /api/notifications/:notificationId
+exports.deleteNotification = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', notificationId);
+
+    if (error) throw error;
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Admin deletes every broadcast notification for everyone
+// @route   DELETE /api/notifications
+exports.deleteAllNotifications = async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .not('id', 'is', null); // delete all rows
+
+    if (error) throw error;
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

@@ -592,3 +592,71 @@
   max-width: 700px;
   box-sizing: border-box;
 }
+.admin-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+} 
+.notif-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  background: #fff;
+}
+
+.notif-category-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.admin-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.icon-badge svg {
+  width: 16px;
+  height: 16px;
+  stroke: #fff;
+}
+.admin-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.icon-badge svg {
+  width: 16px;
+  height: 16px;
+  stroke: #fff;
+}
