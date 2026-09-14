@@ -550,13 +550,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   position: relative;
 }
-
 .step span {
   width: 36px;
   height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
   border-radius: 50%;
   background: var(--primary-soft, #e0f2fe);
   border: 2px solid var(--border, #dceaf7);
@@ -566,9 +569,13 @@
   justify-content: center;
   font-weight: 600;
   font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
   transition: all 0.3s ease;
 }
-
 .step p {
   font-size: 11px;
   color: var(--muted-foreground, #94a3b8);
@@ -581,9 +588,8 @@
   background: var(--gradient-sky, linear-gradient(135deg, #0284c7, #0ea5e9 45%, #22b8cf));
   border-color: var(--primary, #0ea5e9);
   color: white;
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.35);
+  box-shadow: 0 0 6px rgba(14, 165, 233, 0.25);
 }
-
 .step.active p {
   color: var(--foreground, #313b4f);
 }
@@ -596,8 +602,7 @@
   margin: 0 4px;
 }
 
-.step.active + .step-line,
-.step-line + .step.active {
+.step.active + .step-line {
   background: var(--primary, #0ea5e9);
 }
 
@@ -639,9 +644,13 @@
     margin-bottom: 24px;
   }
 
-  .step span {
+    .step span {
     width: 32px;
     height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 32px;
+    max-height: 32px;
     font-size: 12px;
   }
 

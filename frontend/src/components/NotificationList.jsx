@@ -32,10 +32,10 @@ function NotificationList({ onUnreadCountChange, onItemClick }) {
     onItemClick?.(n);
   };
 
-  if (loading) return <p style={{ fontSize: 13, color: '#6b7280', padding: '12px 16px' }}>Loading...</p>;
+  if (loading) return <p style={{ fontSize: 13, color: 'var(--muted-foreground)', padding: '12px 16px' }}>Loading...</p>;
 
   if (notifications.length === 0) {
-    return <p style={{ fontSize: 13, color: '#6b7280', padding: '12px 16px' }}>No notifications yet.</p>;
+    return <p style={{ fontSize: 13, color: 'var(--muted-foreground)', padding: '12px 16px' }}>No notifications yet.</p>;
   }
 
   return (
@@ -48,13 +48,13 @@ function NotificationList({ onUnreadCountChange, onItemClick }) {
             padding: '10px 12px',
             borderRadius: 8,
             border: 'none',
-            background: n.isRead ? 'white' : '#eff6ff',
+            background: n.isRead ? 'var(--card)' : 'var(--primary-soft)',
             cursor: 'pointer'
           }}
         >
-          <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>{n.title}</p>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: '4px 0 0' }}>{n.message}</p>
-          <p style={{ fontSize: 11, color: '#9ca3af', margin: '4px 0 0' }}>
+          <p style={{ fontWeight: 600, fontSize: 14, margin: 0, color: 'var(--foreground)' }}>{n.title}</p>
+          <p style={{ fontSize: 13, color: 'var(--muted-foreground)', margin: '4px 0 0' }}>{n.message}</p>
+          <p style={{ fontSize: 11, color: 'var(--muted-foreground)', margin: '4px 0 0' }}>
             {new Date(n.created_at).toLocaleDateString()}
           </p>
         </div>
@@ -62,5 +62,4 @@ function NotificationList({ onUnreadCountChange, onItemClick }) {
     </div>
   );
 }
-
 export default NotificationList;

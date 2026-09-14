@@ -94,7 +94,8 @@ const formatDate = (date) => {
 
 export default function AdminDashboard({ token, onLogout }) {
   const [section, setSection] = useState('overview');
-  const [settingsSubTab, setSettingsSubTab] = useState('platform');
+  const [showSidebar, setShowSidebar] = useState(false);
+  const sidebarRef = useRef(null);  const [settingsSubTab, setSettingsSubTab] = useState('platform');
   const [userName, setUserName] = useState('Admin');
   const [userEmail, setUserEmail] = useState('admin@example.com');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -107,7 +108,7 @@ export default function AdminDashboard({ token, onLogout }) {
     setUserEmail(email);
   }, []);
 
-  useEffect(() => {
+    useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowUserDropdown(false);
@@ -116,6 +117,21 @@ export default function AdminDashboard({ token, onLogout }) {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutsideSidebar = (e) => {
+      if (
+        showSidebar &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target) &&
+        !e.target.closest('.admin-sidebar-menu-btn')
+      ) {
+        setShowSidebar(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutsideSidebar);
+    return () => document.removeEventListener('click', handleClickOutsideSidebar);
+  }, [showSidebar]);
 
   const handleLogoutClick = () => {
     setShowUserDropdown(false);
@@ -147,8 +163,14 @@ export default function AdminDashboard({ token, onLogout }) {
   return (
     <div className="admin-container">
       <header className="admin-header">
+        <button
+          className={`admin-sidebar-menu-btn mobile-only ${showSidebar ? 'active' : ''}`}
+          onClick={() => setShowSidebar(!showSidebar)}
+          title="Menu"
+        >
+          ☰
+        </button>
         <h1 className="admin-brand">Admin</h1>
-
         <div className="admin-user-menu-wrapper" ref={dropdownRef}>
           <button
             className="admin-user-profile-btn"
@@ -189,27 +211,29 @@ export default function AdminDashboard({ token, onLogout }) {
       </header>
 
       <div className="admin-body">
-        <aside className="admin-sidebar">
+        <aside ref={sidebarRef} className={`admin-sidebar ${showSidebar ? 'open' : ''}`}>
           <nav className="admin-nav">
-            <button className={`admin-nav-item ${section === 'overview' ? 'active' : ''}`} onClick={() => setSection('overview')}>
+            <button className={`admin-nav-item ${section === 'overview' ? 'active' : ''}`} onClick={() => { setSection('overview'); setShowSidebar(false); }}>
               <IconOverview /> Overview
             </button>
-            <button className={`admin-nav-item ${section === 'feedback' ? 'active' : ''}`} onClick={() => setSection('feedback')}>
+            <button className={`admin-nav-item ${section === 'feedback' ? 'active' : ''}`} onClick={() => { setSection('feedback'); setShowSidebar(false); }}>
               <IconFeedback /> Feedback
             </button>
-            <button className={`admin-nav-item ${section === 'notifications' ? 'active' : ''}`} onClick={() => setSection('notifications')}>
+            <button className={`admin-nav-item ${section === 'notifications' ? 'active' : ''}`} onClick={() => { setSection('notifications'); setShowSidebar(false); }}>
               <IconBellA /> Notifications
             </button>
-            <button className={`admin-nav-item ${section === 'trash' ? 'active' : ''}`} onClick={() => setSection('trash')}>
+            <button className={`admin-nav-item ${section === 'trash' ? 'active' : ''}`} onClick={() => { setSection('trash'); setShowSidebar(false); }}>
               <IconTrashA /> Trash
             </button>
-            <button className={`admin-nav-item ${section === 'settings' ? 'active' : ''}`} onClick={() => { setSection('settings'); setSettingsSubTab('platform'); }}>
+            <button className={`admin-nav-item ${section === 'settings' ? 'active' : ''}`} onClick={() => { setSection('settings'); setSettingsSubTab('platform'); setShowSidebar(false); }}>
               <IconSettingsA /> Settings
             </button>
           </nav>
         </aside>
-        <main className="admin-main">
-          {section === 'overview' && <OverviewSection token={token} />}
+        {showSidebar && (
+          <div className="admin-sidebar-overlay" onClick={() => setShowSidebar(false)} />
+        )}
+        <main className="admin-main">          {section === 'overview' && <OverviewSection token={token} />}
           {section === 'feedback' && <FeedbackSection token={token} />}
           {section === 'trash' && <TrashSection token={token} />}
           {section === 'notifications' && <NotificationsSection token={token} />}

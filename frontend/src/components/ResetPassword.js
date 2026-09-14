@@ -78,6 +78,7 @@ export default function ResetPassword() {
   };
 
   // Handle code input
+  // Handle code input
   const handleCodeChange = (index, value) => {
     const newCode = [...verificationCode];
     newCode[index] = value.slice(-1);
@@ -89,6 +90,12 @@ export default function ResetPassword() {
     }
   };
 
+  // Move focus back on Backspace when the current box is already empty
+  const handleCodeKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
+      document.getElementById(`reset-code-${index - 1}`)?.focus();
+    }
+  };
   // Step 2: Verify code
   const handleStep2 = async (e) => {
     e.preventDefault();
@@ -298,6 +305,7 @@ export default function ResetPassword() {
                       maxLength="1"
                       value={digit}
                       onChange={(e) => handleCodeChange(index, e.target.value)}
+                      onKeyDown={(e) => handleCodeKeyDown(index, e)}
                       className="code-input"
                     />
                   ))}

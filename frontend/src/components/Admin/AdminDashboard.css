@@ -382,21 +382,60 @@
   cursor: not-allowed;
 }
 
+.admin-sidebar-menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--admin-text);
+  padding: 4px 8px;
+}
+
+.admin-sidebar-overlay {
+  display: none;
+}
+
 @media (max-width: 720px) {
   .admin-stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .admin-body {
-    flex-direction: column;
+
+  .admin-sidebar-menu-btn.mobile-only {
+    display: inline-flex;
+    align-items: center;
   }
+
   .admin-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--admin-border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 240px;
+    z-index: 1001;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.1);
   }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 1000;
+  }
+
   .admin-nav {
-    flex-direction: row;
-    overflow-x: auto;
+    flex-direction: column;
+    overflow-x: visible;
   }
 }
 .admin-header {

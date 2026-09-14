@@ -74,8 +74,8 @@ function AppContent() {
     return isAdmin ? <Navigate to="/admin" /> : <Navigate to="/dashboard" />;
   };
 
-  const LoginRedirect = () => {
-    if (!token) return <Login />;
+    const LoginRedirect = () => {
+    if (!token) return <Login setToken={setToken} />;
     if (!adminChecked) return <div style={{ padding: 40, textAlign: 'center' }}>Checking access...</div>;
     return isAdmin ? <Navigate to="/admin" /> : <Navigate to="/dashboard" />;
   };

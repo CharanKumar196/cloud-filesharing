@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
 
-export default function Login() {
+export default function Login({ setToken }) {
   const navigate = useNavigate();
   const [scrollProgress, setScrollProgress] = useState(0);
   const [email, setEmail] = useState('');
@@ -48,10 +48,12 @@ export default function Login() {
       }
 
       // Debug: Check what backend returned
+           // Debug: Check what backend returned
       console.log('Login response:', data.user);
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.user?.fullName || email || 'User');
       localStorage.setItem('userEmail', data.user?.email || email || 'user@example.com');
+      if (setToken) setToken(data.token);
       navigate('/dashboard');
      } catch (err) {
       setError('Connection error. Please check your internet.');

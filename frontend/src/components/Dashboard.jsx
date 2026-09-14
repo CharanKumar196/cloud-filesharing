@@ -1432,12 +1432,12 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
   </button>
 
   {showNotifications && (
-    <div style={{
-      position: 'absolute', top: '100%', right: 0, marginTop: 8,
-      width: 340, maxHeight: 400, overflowY: 'auto',
-      background: 'white', border: '1px solid #e5e7eb',
+      <div style={{
+      position: 'absolute', top: '100%', right: -10, marginTop: 8,
+      width: 340, maxWidth: 'calc(100vw - 16px)', maxHeight: 400, overflowY: 'auto',
+      background: 'var(--card)', border: '1px solid var(--border)',
       borderRadius: 12, padding: 12, zIndex: 50,
-      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+      boxShadow: 'var(--shadow-lift)'
         }}>
           <NotificationList
               onUnreadCountChange={setUnreadCount}
@@ -2034,12 +2034,12 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
                     <div className="settings-section-card">
                       {selectedBroadcast ? (
                         <div>
-                          <button
+                                                    <button
                             onClick={() => setSelectedBroadcast(null)}
                             style={{
                               background: 'none', border: 'none', cursor: 'pointer',
                               display: 'flex', alignItems: 'center', gap: 6,
-                              fontSize: 13, color: '#2563eb', padding: 0, marginBottom: 16
+                              fontSize: 13, color: 'var(--primary)', padding: 0, marginBottom: 16
                             }}
                           >
                             ← Back to messages
@@ -2057,16 +2057,15 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
                             {selectedBroadcast.type || 'info'}
                           </span>
 
-                          <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>
+                          <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 6px', color: 'var(--foreground)' }}>
                             {selectedBroadcast.title}
                           </h2>
-                          <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 20px' }}>
+                          <p style={{ fontSize: 13, color: 'var(--muted-foreground)', margin: '0 0 20px' }}>
                             {new Date(selectedBroadcast.created_at).toLocaleString()}
                           </p>
-                          <p style={{ fontSize: 15, lineHeight: 1.7, color: '#374151', whiteSpace: 'pre-wrap' }}>
+                          <p style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--foreground)', whiteSpace: 'pre-wrap' }}>
                             {selectedBroadcast.message}
-                          </p>
-                        </div>
+                          </p>                        </div>
                       ) : (
                         <>
                           <h3 className="settings-section-title">Notifications</h3>
@@ -2074,9 +2073,9 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
 
                           <div style={{ margin: '16px 0 24px' }}>
                             {broadcastLoading ? (
-                              <p style={{ fontSize: 13, color: '#9ca3af' }}>Loading messages...</p>
+                              <p style={{ fontSize: 13, color: 'var(--muted-foreground)' }}>Loading messages...</p>
                             ) : broadcastMessages.length === 0 ? (
-                              <p style={{ fontSize: 13, color: '#9ca3af' }}>No messages yet.</p>
+                              <p style={{ fontSize: 13, color: 'var(--muted-foreground)' }}>No messages yet.</p>
                             ) : (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                 {broadcastMessages.map(msg => (
@@ -2086,29 +2085,29 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
                                     style={{
                                       display: 'flex', alignItems: 'flex-start', gap: 12,
                                       padding: '12px 8px', borderRadius: 8, cursor: 'pointer',
-                                      borderBottom: '1px solid #f3f4f6'
+                                      borderBottom: '1px solid var(--border)'
                                     }}
                                   >
                                     <div style={{
                                       width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
-                                      background: msg.isRead ? 'transparent' : '#2563eb'
+                                      background: msg.isRead ? 'transparent' : 'var(--primary)'
                                     }} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                       <p style={{
                                         margin: 0, fontSize: 14,
                                         fontWeight: msg.isRead ? 500 : 700,
-                                        color: '#111827'
+                                        color: 'var(--foreground)'
                                       }}>
                                         {msg.title}
                                       </p>
                                       <p style={{
-                                        margin: '2px 0 0', fontSize: 13, color: '#6b7280',
+                                        margin: '2px 0 0', fontSize: 13, color: 'var(--muted-foreground)',
                                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                                       }}>
                                         {msg.message}
                                       </p>
                                     </div>
-                                    <span style={{ fontSize: 12, color: '#9ca3af', flexShrink: 0 }}>
+                                    <span style={{ fontSize: 12, color: 'var(--muted-foreground)', flexShrink: 0 }}>
                                       {new Date(msg.created_at).toLocaleDateString()}
                                     </span>
                                   </div>
@@ -2116,7 +2115,6 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
                               </div>
                             )}
                           </div>
-
                           
                         </>
                       )}

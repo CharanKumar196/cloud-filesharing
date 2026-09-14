@@ -82,7 +82,7 @@ export default function Signup() {
     }
   };
 
-  // Handle code input
+   // Handle code input
   const handleCodeChange = (index, value) => {
     const newCode = [...verificationCode];
     newCode[index] = value.slice(-1);
@@ -91,6 +91,13 @@ export default function Signup() {
     // Auto-focus next input
     if (value && index < 5) {
       document.getElementById(`code-${index + 1}`)?.focus();
+    }
+  };
+
+  // Move focus back on Backspace when the current box is already empty
+  const handleCodeKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
+      document.getElementById(`code-${index - 1}`)?.focus();
     }
   };
 
@@ -317,6 +324,7 @@ const handleStep3 = async (e) => {
                       maxLength="1"
                       value={digit}
                       onChange={(e) => handleCodeChange(index, e.target.value)}
+                      onKeyDown={(e) => handleCodeKeyDown(index, e)}
                       className="code-input"
                     />
                   ))}
