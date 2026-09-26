@@ -1,3 +1,5 @@
+
+const adminController = require('../controllers/adminController');
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
@@ -15,6 +17,7 @@ router.post('/forgot-password', authController.forgotPassword);
 router.post('/verify-reset-code', authController.verifyResetCode);
 router.post('/reset-password', authController.resetPassword);
 router.post('/logout', authController.logout);
+router.get('/public-settings', adminController.getPublicSettings);
 
 // ============================================
 // PROTECTED ROUTES

@@ -246,3 +246,25 @@ exports.updateSettings = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @route   GET /api/settings/public
+// Public — no auth required. Used by the frontend to gate access during maintenance.
+exports.getPublicSettings = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('platform_settings')
+      .select('maintenance_mode, allow_signups')
+      .eq('id', 1)
+      .single();
+    if (error) throw error;
+
+    res.status(200).json({
+      success: true,
+      maintenanceMode: data.maintenance_mode,
+      allowSignups: data.allow_signups,
+    });
+  } catch (error) {
+    console.error('Public settings error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

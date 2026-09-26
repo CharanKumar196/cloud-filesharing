@@ -10,7 +10,7 @@ import ResetPassword from './components/ResetPassword';
 import SharedFileView from './components/SharedFileView';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import "./theme-variables.css";
-import { checkIsAdmin } from './api';
+import { checkIsAdmin, getPublicSettings } from './api';
 import PoliciesPage from './pages/policies';   // new import
 
 
@@ -21,6 +21,8 @@ function AppContent() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminChecked, setAdminChecked] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceChecked, setMaintenanceChecked] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -41,6 +43,13 @@ function AppContent() {
       setAdminChecked(true);
     }
   }, [token]);
+
+  useEffect(() => {
+    getPublicSettings().then((res) => {
+      if (res.success) setMaintenanceMode(res.maintenanceMode);
+      setMaintenanceChecked(true);
+    }).catch(() => setMaintenanceChecked(true));
+  }, []);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -67,6 +76,19 @@ function AppContent() {
 
   // Hide navbar on Dashboard only
   const showNavbar = location.pathname === '/';
+
+  if (!maintenanceChecked) {
+    return <div style={{ padding: 40, textAlign: 'center' }}>Loading...</div>;
+  }
+
+  if (maintenanceMode && !(token && isAdmin)) {
+    return (
+      <div style={{ padding: 60, textAlign: 'center' }}>
+        <h1>🛠️ Under Maintenance</h1>
+        <p>We're currently performing scheduled maintenance. Please check back shortly.</p>
+      </div>
+    );
+  }
 
   const AuthRedirect = () => {
     if (!token) return <LandingPage />;

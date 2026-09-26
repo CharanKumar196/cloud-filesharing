@@ -512,21 +512,25 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
   };
 
   const handleShare = async (fileId, fileName) => {
-    try {
-      const response = await shareFile(fileId, token);
-      if (response.success) {
-        const shareLink = response.shareLink;
-        navigator.clipboard.writeText(shareLink);
-        alert('✅ Share link copied to clipboard!\n\n' + shareLink);
-        loadDashboardData();
-      } else {
-        alert('❌ Error: ' + response.message);
+  try {
+    const response = await shareFile(fileId, token);
+    if (response.success) {
+      const shareLink = response.shareLink;
+      try {
+        await navigator.clipboard.writeText(shareLink);
+      } catch (clipErr) {
+        console.error('Clipboard write failed:', clipErr);
       }
-    } catch (error) {
-      console.error('Share error:', error);
-      alert('❌ Failed to share file');
+      alert('✅ Share link copied to clipboard!\n\n' + shareLink);
+      loadDashboardData();
+    } else {
+      alert('❌ Error: ' + response.message);
     }
-  };
+  } catch (error) {
+    console.error('Share error:', error);
+    alert('❌ Failed to share file');
+  }
+};
 
   const handleMoveToFolder = async (fileId, fileName) => {
     if (folders.length === 0) {
@@ -643,22 +647,25 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
     }
   };
 
-  const handleShareFolder = async (folderId, folderName) => {
-    try {
-      const response = await shareFolder(folderId, token);
-      if (response.success) {
-        navigator.clipboard.writeText(response.shareLink);
-        alert('✅ Share link copied to clipboard!\n\n' + response.shareLink);
-        loadDashboardData();
-      } else {
-        alert('❌ Error: ' + response.message);
+const handleShareFolder = async (folderId, folderName) => {
+  try {
+    const response = await shareFolder(folderId, token);
+    if (response.success) {
+      try {
+        await navigator.clipboard.writeText(response.shareLink);
+      } catch (clipErr) {
+        console.error('Clipboard write failed:', clipErr);
       }
-    } catch (error) {
-      console.error('Share folder error:', error);
-      alert('❌ Failed to share folder');
+      alert('✅ Share link copied to clipboard!\n\n' + response.shareLink);
+      loadDashboardData();
+    } else {
+      alert('❌ Error: ' + response.message);
     }
-  };
-
+  } catch (error) {
+    console.error('Share folder error:', error);
+    alert('❌ Failed to share folder');
+  }
+};
   const handleArchiveFolder = async (folderId) => {
     try {
       const response = await archiveFolder(folderId, token);
@@ -1716,7 +1723,14 @@ export default function Dashboard({ token, onLogout, isAdmin }) {
                 ) : (
                   <div className="tile-grid">
                     {files.filter(f => f.shareLink).map(file => renderFileTile(file, [
-                      { label: <><IconShare /> Copy Link</>, onClick: () => { navigator.clipboard.writeText(file.shareLink); alert('✅ Link copied!'); } },
+                      { label: <><IconShare /> Copy Link</>, onClick: async () => {
+                        try {
+                          await navigator.clipboard.writeText(file.shareLink);
+                        } catch (clipErr) {
+                          console.error('Clipboard write failed:', clipErr);
+                        }
+                        alert('✅ Link copied!');
+                      } },
                       { label: <><IconEye /> Preview</>, onClick: () => handlePreview(file) },
                     ], () => handlePreview(file)))}
                   </div>

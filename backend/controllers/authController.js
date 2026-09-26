@@ -12,7 +12,21 @@ const LOCK_MINUTES = 20;
 exports.register = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
- 
+
+    // Check platform-wide signup toggle
+    const { data: settings } = await supabase
+      .from('platform_settings')
+      .select('allow_signups')
+      .eq('id', 1)
+      .single();
+
+    if (settings && settings.allow_signups === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'New signups are currently disabled. Please try again later.'
+      });
+    }
+
     if (!fullName || !email || !password) {
       return res.status(400).json({ 
         success: false, 
@@ -86,18 +100,33 @@ exports.login = async (req, res) => {
       });
     }
  
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .maybeSingle();
- 
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
-    }
+   const { data: user, error } = await supabase
+  .from('users')
+  .select('*')
+  .eq('email', email)
+  .maybeSingle();
+
+if (!user) {
+  return res.status(401).json({
+    success: false,
+    message: 'Invalid email or password'
+  });
+}
+
+// Block non-admin logins during maintenance mode
+const { data: settings } = await supabase
+  .from('platform_settings')
+  .select('maintenance_mode')
+  .eq('id', 1)
+  .single();
+
+if (settings && settings.maintenance_mode === true && user.is_admin !== true) {
+  return res.status(503).json({
+    success: false,
+    message: 'The platform is currently under maintenance. Only admins can log in right now.'
+  });
+}
+
  
     const now = new Date();
  

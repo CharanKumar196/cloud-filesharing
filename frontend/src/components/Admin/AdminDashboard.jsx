@@ -625,6 +625,7 @@ function SettingsSection({ token, subTab, setSubTab, userName, userEmail, setUse
               Platform
             </button>
           </div>
+      
 
           {subTab === 'profile' && (
             <div className="admin-panel">
@@ -719,16 +720,7 @@ function SettingsSection({ token, subTab, setSubTab, userName, userEmail, setUse
           {subTab === 'platform' && (
             settings ? (
               <div className="admin-panel">
-                <div className="admin-field">
-                  <label className="admin-field-label">Default storage limit for new users (GB)</label>
-                  <input
-                    className="admin-field-input"
-                    type="number"
-                    value={(settings.default_storage_limit / (1024 * 1024 * 1024)).toFixed(1)}
-                    onChange={(e) => setSettings({ ...settings, default_storage_limit: Math.round(Number(e.target.value) * 1024 * 1024 * 1024) })}
-                  />
-                </div>
-
+                
                 <div className="admin-toggle-row">
                   <span>Allow new signups</span>
                   <button

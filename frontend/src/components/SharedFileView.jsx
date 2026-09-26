@@ -86,99 +86,60 @@ export default function SharedFileView() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f1419', color: 'white', padding: '40px 20px' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '40px' }}>
-          <h1 style={{ fontSize: '32px', marginBottom: '10px' }}>📤 Shared File</h1>
-          <p style={{ color: '#999', fontSize: '14px' }}>
-            Someone shared a file with you
-          </p>
+  <div className="shared-file-page">
+    <div className="shared-file-container">
+      {/* Header */}
+      <div className="shared-file-header">
+        <h1 className="shared-file-title">📤 Shared File</h1>
+        <p className="shared-file-subtitle">
+          Someone shared a file with you
+        </p>
+      </div>
+
+      {loading ? (
+        <div className="shared-file-loading">
+          <div className="shared-file-loading-icon">⏳</div>
+          <p>Loading file...</p>
         </div>
-
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontSize: '40px', marginBottom: '20px' }}>⏳</div>
-            <p>Loading file...</p>
-          </div>
-        ) : error ? (
-          <div style={{
-            background: '#1a1f2e',
-            border: '1px solid #ff4444',
-            borderRadius: '8px',
-            padding: '30px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '40px', marginBottom: '15px' }}>❌</div>
-            <h2 style={{ marginBottom: '10px' }}>File Not Found</h2>
-            <p style={{ color: '#999', marginBottom: '20px' }}>{error}</p>
-            <button
-              onClick={() => navigate('/')}
-              style={{
-                background: '#4A90E2',
-                color: 'white',
-                border: 'none',
-                padding: '10px 20px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              Go Home
-            </button>
-          </div>
-        ) : file ? (
-          <div style={{
-            background: '#1a1f2e',
-            border: '1px solid #4A90E2',
-            borderRadius: '12px',
-            padding: '30px'
-          }}>
-            {/* File Info */}
-            <div style={{ marginBottom: '30px', textAlign: 'center' }}>
-              <div style={{ fontSize: '60px', marginBottom: '15px' }}>
-                {getFileIcon(file.filename)}
-              </div>
-              <h2 style={{ marginBottom: '10px', wordBreak: 'break-all' }}>
-                {file.filename}
-              </h2>
-              <p style={{ color: '#999', marginBottom: '20px' }}>
-                {formatFileSize(file.fileSize)} • {formatDate(file.uploadDate)}
-              </p>
+      ) : error ? (
+        <div className="shared-file-error-card">
+          <div className="shared-file-error-icon">❌</div>
+          <h2 className="shared-file-error-title">File Not Found</h2>
+          <p className="shared-file-error-text">{error}</p>
+          <button className="shared-file-home-btn" onClick={() => navigate('/')}>
+            Go Home
+          </button>
+        </div>
+      ) : file ? (
+        <div className="shared-file-card">
+          {/* File Info */}
+          <div className="shared-file-info">
+            <div className="shared-file-icon">
+              {getFileIcon(file.filename)}
             </div>
-
-            {/* Download Button */}
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              style={{
-                width: '100%',
-                background: downloading ? '#666' : '#4A90E2',
-                color: 'white',
-                border: 'none',
-                padding: '15px',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                cursor: downloading ? 'not-allowed' : 'pointer',
-                marginBottom: '15px',
-                transition: 'background 0.3s'
-              }}
-            >
-              {downloading ? '⏳ Downloading...' : '📥 Download File'}
-            </button>
-
-            <p style={{
-              color: '#999',
-              fontSize: '12px',
-              textAlign: 'center',
-              marginTop: '20px'
-            }}>
-              ✅ This file was shared with you. You can download it without logging in.
+            <h2 className="shared-file-name">
+              {file.filename}
+            </h2>
+            <p className="shared-file-meta">
+              {formatFileSize(file.fileSize)} • {formatDate(file.uploadDate)}
             </p>
           </div>
-        ) : null}
-      </div>
+
+          {/* Download Button */}
+          <button
+            className="shared-file-download-btn"
+            onClick={handleDownload}
+            disabled={downloading}
+          >
+            {downloading ? '⏳ Downloading...' : '📥 Download File'}
+          </button>
+
+          <p className="shared-file-footer-note">
+            ✅ This file was shared with you. You can download it without logging in.
+          </p>
+        </div>
+      ) : null}
     </div>
-  );
+  </div>
+);
 }

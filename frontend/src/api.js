@@ -30,7 +30,10 @@ export const sendVerification = async (email) => {
   });
   return response.json();
 };
-
+export const getPublicSettings = async () => {
+  const response = await fetch(`${API_URL}/auth/public-settings`);
+  return response.json();
+};
 export const verifyCode = async (email, code) => {
   const response = await fetch(`${API_URL}/auth/verify-code`, {
     method: 'POST',
